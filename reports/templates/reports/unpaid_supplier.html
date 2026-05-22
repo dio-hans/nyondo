@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Accounts Payable Report | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6">
+    <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider"><i class="fa-solid fa-business-time text-rose-600 mr-1"></i> Outstanding Factory Credit Liabilities</h2>
+    <p class="text-xs text-slate-400 font-medium">Aging summary ledger representing unpaid materials inventory values.</p>
+</div>
+
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase text-slate-500">
+                <th class="p-4 pl-6">Supplier Source Depot</th>
+                <th class="p-4">Material Batch Received</th>
+                <th class="p-4 text-center">Delivered Qty</th>
+                <th class="p-4 text-right pr-6">Outstanding Payable Balance</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            {% for purchase in unpaid_orders %}
+            <tr>
+                <td class="p-4 pl-6 font-black text-slate-900 uppercase">{{ purchase.supplier.name }}</td>
+                <td class="p-4 text-slate-500 font-bold">{{ purchase.product.name }}</td>
+                <td class="p-4 text-center">{{ purchase.quantity }} items</td>
+                <td class="p-4 text-right pr-6 font-black text-rose-700">UGX {{ purchase.balance }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center py-8 text-slate-400 font-bold uppercase">Excellent. All supplier credit balances stand fully settled.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

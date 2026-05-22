@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Temporary Receipt | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-amber-50/40 border border-amber-200 rounded-xl shadow-sm p-6 relative overflow-hidden" id="print-area">
+    <div class="absolute top-0 right-0 bg-amber-600 text-white font-black text-[9px] uppercase tracking-widest px-4 py-1 rounded-bl-lg shadow-sm">
+        Temporary Receipt
+    </div>
+
+    <div class="text-center border-b border-dashed border-amber-200 pb-4">
+        <h3 class="text-sm font-black text-slate-900 tracking-tight">NYONDO GENERAL HARDWARE LTD</h3>
+        <p class="text-[10px] text-amber-800 font-bold tracking-wider uppercase">Salary Earner Scheme Installment Acknowledgement</p>
+    </div>
+
+    <div class="space-y-3 my-6 text-xs font-medium text-slate-700">
+        <div class="flex justify-between"><span class="text-slate-400">Receipt Ref:</span> <span class="font-bold">#TEMP-{{ deposit.id }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Date Logged:</span> <span>{{ deposit.created_at|date:"Y-m-d H:i" }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Member Name:</span> <span class="font-black text-slate-900 uppercase">{{ deposit.member.full_name }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">National NIN:</span> <span class="font-mono tracking-wider">{{ deposit.member.nin_number }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Reserved Category:</span> <span class="font-bold text-slate-900">{{ deposit.target_material }}</span></div>
+        
+        <div class="bg-white border border-amber-200 p-3 rounded-lg text-center mt-4">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Amount Credited Today</span>
+            <span class="text-lg font-black text-emerald-700">UGX {{ deposit.amount }}</span>
+        </div>
+    </div>
+
+    <p class="text-[9px] text-slate-400 text-center font-medium italic">Note: Goods under this scheme are determined by the current market pricing valuations on the actual day of collection.</p>
+</div>
+<div class="max-w-md mx-auto mt-4">
+    <button onclick="window.print()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 text-xs uppercase tracking-wider rounded-lg transition-all">Print Receipt</button>
+</div>
+{% endblock %}

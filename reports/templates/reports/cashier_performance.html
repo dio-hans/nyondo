@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Cashier Performance Audit | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+        <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider"><i class="fa-solid fa-user-check text-blue-600 mr-1"></i> Attendant Processing Performance</h2>
+        <p class="text-xs text-slate-400 font-medium">Monitors total billing numbers and checkout velocities across staff shifts.</p>
+    </div>
+    <form method="GET" class="flex gap-2 text-xs font-bold">
+        <input type="date" name="start" required class="border border-slate-200 px-2 py-1 rounded-md">
+        <input type="date" name="end" required class="border border-slate-200 px-2 py-1 rounded-md">
+        <button type="submit" class="bg-slate-900 text-white px-3 py-1 rounded-md text-[11px] uppercase tracking-wider">Run</button>
+    </form>
+</div>
+
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase text-slate-500">
+                <th class="p-4 pl-6">Staff Account User</th>
+                <th class="p-4 text-center">Receipts Invoiced</th>
+                <th class="p-4 text-right pr-6">Total Turnover Billed</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            {% for attendant in performance_data %}
+            <tr>
+                <td class="p-4 pl-6 font-black text-slate-900">@{{ attendant.served_by__username }}</td>
+                <td class="p-4 text-center font-bold text-slate-600">{{ attendant.order_count }} invoices</td>
+                <td class="p-4 text-right pr-6 font-black text-blue-600">UGX {{ attendant.total_sales }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center py-8 text-slate-400 font-bold uppercase">No cashier transactions logged within range values.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

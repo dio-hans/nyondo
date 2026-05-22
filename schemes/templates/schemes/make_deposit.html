@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Log Scheme Deposit | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+    <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Log Scheme Installment Payment</h2>
+    <p class="text-xs text-slate-400 font-medium mb-6">Process incoming funds for enrolled salary earners.</p>
+
+    <form method="POST" action="" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Select Enrolled Member</label>
+            <select name="member" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                {% for member in members %}
+                <option value="{{ member.id }}">{{ member.full_name }} (NIN: {{ member.nin_number }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Deposit Amount (UGX)</label>
+            <input type="number" name="amount" min="1" required placeholder="Amount paid today" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Target Material Allocation</label>
+            <select name="target_material" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                <option value="CEMENT">Cement (Cem II / Cem III)</option>
+                <option value="IRON_SHEETS">Iron Sheets (All Gauges)</option>
+                <option value="IRON_BARS">Iron Bars (10mm, 12mm, 16mm)</option>
+            </select>
+            <span class="text-[9px] text-amber-600 font-bold block mt-1">⚠️ Per company rules, this program is restricted to cement, iron sheets, and bars only.</span>
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all shadow-sm">
+            Issue Temporary Receipt
+        </button>
+    </form>
+</div>
+{% endblock %}

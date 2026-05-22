@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Least Selling Products | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+        <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider"><i class="fa-solid fa-arrow-down-short-wide text-rose-600 mr-1"></i> Sluggish/Least Selling Tracking</h2>
+        <p class="text-xs text-slate-400 font-medium">Flags materials with slow inventory turnover metrics.</p>
+    </div>
+    <form method="GET" class="flex gap-2 text-xs font-bold">
+        <input type="date" name="start" required class="border border-slate-200 px-2 py-1 rounded-md">
+        <input type="date" name="end" required class="border border-slate-200 px-2 py-1 rounded-md">
+        <button type="submit" class="bg-slate-900 text-white px-3 py-1 rounded-md text-[11px] uppercase tracking-wider">Run</button>
+    </form>
+</div>
+
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase text-slate-500">
+                <th class="p-4 pl-6">Material Description</th>
+                <th class="p-4 text-center">Current Warehouse Count</th>
+                <th class="p-4 text-center">Volume Dispatched Inside Range</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            {% for item in slow_data %}
+            <tr class="hover:bg-rose-50/20">
+                <td class="p-4 pl-6 font-black text-slate-900 uppercase">{{ item.name }}</td>
+                <td class="p-4 text-center font-bold text-slate-600">{{ item.current_stock }} units</td>
+                <td class="p-4 text-center font-black text-rose-700">{{ item.total_sold|default:"0" }} units sold</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center py-8 text-slate-400 font-bold uppercase">All hardware items are performing normally.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
