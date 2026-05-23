@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.conf import settings
+
 
 
 class Category(models.Model):
@@ -90,6 +92,11 @@ class Product(models.Model):
         auto_now=True
     )
 
+    average_daily_sales = models.PositiveIntegerField(
+    default=1
+)
+    
+
     def clean(self):
         if self.selling_price is not None and self.cost_price is not None:
             if self.selling_price <= self.cost_price:
@@ -168,3 +175,21 @@ class StockMovement(models.Model):
     def __str__(self):
 
         return f"{self.product.name} -{self.transaction_type}"
+    
+class AuditLog(models.Model):
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+
+    action = models.CharField(
+        max_length=255
+    )
+
+    timestamp = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return self.action

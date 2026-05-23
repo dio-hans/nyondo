@@ -3,20 +3,28 @@ from django.contrib import messages
 from django.db.models import F
 from django.db import transaction
 import datetime
-from django.contrib.auth.decorators import login_required
 from .models import Product, StockMovement, Category
 # Import models from your procurement app to track supplier credits
 from procurement.models import Supplier, PurchaseOrder 
+from .models import AuditLog
 
-@login_required
+
+
 def product_list(request):
     products = Product.objects.all().order_by('name')
     context = {'products': products}
-    return render(request, 'inventory/product_list.html', context)
+    return render(request, 'product_list.html', context)
 
-@login_required
+
 def inventory_dashboard(request):
     products = Product.objects.all()
+    for product in products:
+        if product.average_daily_sales > 0:
+            product.days_until_stockout = round(
+            product.current_stock / product.average_daily_sales
+        )
+        else:
+            product.days_until_stockout = "Unlimited"
     total_products = products.count()
     
     # Compare current stock levels to custom reorder levels dynamically
@@ -34,9 +42,9 @@ def inventory_dashboard(request):
         'recent_movements': recent_movements,
         'products': products[:10] 
     }
-    return render(request, 'inventory/dashboard.html', context)
+    return render(request, 'dashboard.html', context)
 
-@login_required
+
 def product_create(request):
     """
     Handles registering completely new items lines (e.g. adding 16mm iron bars for the first time)
@@ -49,7 +57,7 @@ def product_create(request):
         price = float(request.POST.get('selling_price', 0))
         uom = request.POST.get('unit_of_measure')
         reorder_lvl = int(request.POST.get('reorder_level', 10))
-        initial_stock = int(request.POST.get('initial_stock', 0))
+        initial_stock = int(request.POST.get('current_stock', 0))
         
         # Smart Credit Parameter Flags
         is_credit = request.POST.get('is_credit') == 'on'
@@ -124,6 +132,11 @@ def product_create(request):
                 )
                 action_text += f" UGX {batch_liability:,.0f} logged as credit debt to {supplier.name}."
 
+            AuditLog.objects.create(
+                user=request.user,
+                action=f"Registered product {product.name}"
+            )    
+
             messages.success(request, action_text)
             return redirect('product_list')
 
@@ -135,9 +148,10 @@ def product_create(request):
         'categories': categories,
         'suppliers': suppliers
     }
-    return render(request, 'inventory/product_form.html', context)
 
-@login_required
+    return render(request, 'product_form.html', context)
+
+
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     stock_movements = StockMovement.objects.filter(product=product).order_by('-created_at')

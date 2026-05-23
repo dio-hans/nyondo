@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Warehouse Master Stock Ledger | Nyondo{% endblock %}
+{% block title %}Warehouse Master Stock Ledger | Nyondo Hardware{% endblock %}
 
 {% block content %}
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -20,6 +20,7 @@
                 <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                     <th class="p-4 pl-6">Material Description</th>
                     <th class="p-4 text-center">Current Count</th>
+                    <th class="p-4 text-center">Stock Projection</th>
                     <th class="p-4 text-right">Factory Cost Price</th>
                     <th class="p-4 text-right">Predetermined Retail Price</th>
                     <th class="p-4 text-center">Status Index</th>
@@ -36,6 +37,17 @@
                         <span class="px-2.5 py-1 rounded-lg {{ product.current_stock|default:0|yesno:'bg-slate-100 text-slate-800' }}">
                             {{ product.current_stock }} units
                         </span>
+                    <td class="p-4 text-center">
+                                {% if product.days_until_stockout <= 7 %}
+                                    <span class="text-rose-600 font-bold">
+                                        {{ product.days_until_stockout }} days left
+                                    </span>
+                                {% else %}
+                                    <span class="text-emerald-600 font-bold">
+                                        {{ product.days_until_stockout }} days left
+                                    </span>
+                                {% endif %}
+                    </td>    
                     </td>
                     <td class="p-4 text-right font-bold text-slate-500">UGX {{ product.cost_price }}</td>
                     <td class="p-4 text-right font-black text-slate-900">UGX {{ product.selling_price }}</td>

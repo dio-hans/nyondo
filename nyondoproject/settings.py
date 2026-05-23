@@ -62,7 +62,7 @@ ROOT_URLCONF = 'nyondoproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -126,5 +126,5 @@ STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'users.User'
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'tailwind' #added by me for the crispy_bootstrap package i installed
 CRISPY_TEMPLATE_PACK = 'tailwind'
-LOGIN_URL = '/users/login/'
+LOGIN_URL = 'users_login'
 LOGIN_REDIRECT_URL = 'dashboard'

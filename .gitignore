@@ -1,0 +1,14 @@
+# Ignore the local SQLite database file
+db.sqlite3
+
+# Ignore virtual environments
+env/
+venv/
+.venv/
+
+# Ignore Python compiled cache files
+__pycache__/
+*.pyc
+
+# Ignore environment variable files (passwords/secret keys)
+.env
