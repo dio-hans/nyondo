@@ -235,15 +235,7 @@ def record_purchase(request):
 
     }
 
-    return render(
-
-        request,
-
-        'procurement/add_purchase.html',
-
-        context
-
-    )
+    return render(request, 'procurement/add_purchase.html', context)
 
 
 # SUPPLIER DEBT LIST
@@ -270,12 +262,46 @@ def supplier_debt_list(request):
 
     }
 
-    return render(
+    return render(request, 'procurement/debt_list.html', context)
 
-        request,
+# Add this at the bottom of procurement/views.py
+def receive_credit_stock(request):
+    # Fetch active suppliers and products to populate your form dropdowns
+    suppliers = Supplier.objects.filter(is_active=True)
+    products = Product.objects.all()
+    
+    context = {
+        'suppliers': suppliers,
+        'products': products
+    }
+    return render(request, 'procurement/receive_credit_stock.html', context)
 
-        'procurement/debt_list.html',
 
-        context
+def procurement_dashboard(request):
+    # 1. High-level KPI metrics
+    total_orders = PurchaseOrder.objects.count()
+    total_spent = PurchaseOrder.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_paid = PurchaseOrder.objects.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
+    total_debt = PurchaseOrder.objects.filter(balance__gt=0).aggregate(Sum('balance'))['balance__sum'] or 0
+    
+    # 2. Status counts for badges
+    pending_count = PurchaseOrder.objects.filter(payment_status='PENDING').count()
+    partial_count = PurchaseOrder.objects.filter(payment_status='PARTIAL').count()
+    paid_count = PurchaseOrder.objects.filter(payment_status='PAID').count()
+    
+    # 3. Recent activity lists
+    recent_orders = PurchaseOrder.objects.select_related('supplier').order_by('-created_at')[:5]
+    recent_items = PurchaseItem.objects.select_related('product', 'purchase_order').order_by('-purchase_order__created_at')[:5]
 
-    )
+    context = {
+        'total_orders': total_orders,
+        'total_spent': total_spent,
+        'total_paid': total_paid,
+        'total_debt': total_debt,
+        'pending_count': pending_count,
+        'partial_count': partial_count,
+        'paid_count': paid_count,
+        'recent_orders': recent_orders,
+        'recent_items': recent_items,
+    }
+    return render(request, 'procurement/dashboard.html', context)

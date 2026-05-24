@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto my-8 px-4">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-900">Record Stock Purchase</h1>
+        <p class="text-sm text-slate-500">Log incoming hardware supply from factory depots and record initial payments.</p>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="p-4 rounded-md text-sm font-medium {% if message.tags == 'error' %}bg-red-50 text-red-800{% elif message.tags == 'success' %}bg-green-50 text-green-800{% else %}bg-blue-50 text-blue-800{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <form method="POST" action="{% url 'record_purchase' %}" class="p-6 sm:p-8 space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label for="supplier" class="block text-sm font-semibold text-slate-700 mb-2">Supplier / Factory Depot *</label>
+                    <select id="supplier" name="supplier" required class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm p-2.5 border">
+                        <option value="">-- Select Supplier --</option>
+                        {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="invoice_number" class="block text-sm font-semibold text-slate-700 mb-2">Invoice / Delivery Note Number *</label>
+                    <input type="text" id="invoice_number" name="invoice_number" required placeholder="e.g. INV-2026-001"
+                           class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm p-2.5 border">
+                </div>
+
+                <div>
+                    <label for="product" class="block text-sm font-semibold text-slate-700 mb-2">Hardware Material *</label>
+                    <select id="product" name="product" required class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm p-2.5 border">
+                        <option value="">-- Select Material --</option>
+                        {% for product in products %}
+                        <option value="{{ product.id }}">{{ product.name }} (Current: {{ product.current_stock }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="quantity" class="block text-sm font-semibold text-slate-700 mb-2">Quantity Ordered / Received *</label>
+                    <input type="number" id="quantity" name="quantity" min="1" required placeholder="e.g. 100"
+                           class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm p-2.5 border">
+                    <p class="mt-1 text-xs text-slate-400">Enter number of units (bags, pieces, packs).</p>
+                </div>
+
+                <div>
+                    <label for="unit_cost" class="block text-sm font-semibold text-slate-700 mb-2">Unit Cost Price (UGX) *</label>
+                    <input type="number" id="unit_cost" name="unit_cost" min="0" step="0.01" required placeholder="e.g. 28000"
+                           class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm p-2.5 border">
+                </div>
+
+                <div>
+                    <label for="amount_paid" class="block text-sm font-semibold text-slate-700 mb-2">Initial Amount Paid (UGX)</label>
+                    <input type="number" id="amount_paid" name="amount_paid" min="0" step="0.01" value="0" placeholder="e.g. 2000000"
+                           class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500 shadow-sm p-2.5 border">
+                    <p class="mt-1 text-xs text-slate-400">Leave 0 if goods are entirely taken on credit.</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mt-4">
+                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Live Calculation Preview</h3>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <span class="block text-xs text-slate-500">Expected Total</span>
+                        <span id="preview-total" class="text-lg font-bold text-slate-800">UGX 0</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-500">Payment Allocation</span>
+                        <span id="preview-paid" class="text-lg font-bold text-blue-600">UGX 0</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-500">Remaining Debt Balance</span>
+                        <span id="preview-balance" class="text-lg font-bold text-red-600">UGX 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <a href="#" class="px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
+                    Cancel
+                </a>
+                <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-all">
+                    Save Order & Update Stock
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const qtyInput = document.getElementById('quantity');
+    const costInput = document.getElementById('unit_cost');
+    const paidInput = document.getElementById('amount_paid');
+
+    const totalText = document.getElementById('preview-total');
+    const paidText = document.getElementById('preview-paid');
+    const balanceText = document.getElementById('preview-balance');
+
+    function calculatePreview() {
+        const qty = parseFloat(qtyInput.value) || 0;
+        const cost = parseFloat(costInput.value) || 0;
+        const paid = parseFloat(paidInput.value) || 0;
+
+        let total = qty * cost;
+        let finalQty = qty;
+
+        // Auto-adjust validation matching your view logic
+        if (paid > total && cost > 0) {
+            finalQty = Math.floor(paid / cost);
+            total = finalQty * cost;
+        }
+
+        const balance = total - paid;
+
+        totalText.innerText = 'UGX ' + total.toLocaleString();
+        paidText.innerText = 'UGX ' + paid.toLocaleString();
+        balanceText.innerText = 'UGX ' + (balance > 0 ? balance.toLocaleString() : '0');
+    }
+
+    qtyInput.addEventListener('input', calculatePreview);
+    costInput.addEventListener('input', calculatePreview);
+    paidInput.addEventListener('input', calculatePreview);
+</script>
+{% endblock %}

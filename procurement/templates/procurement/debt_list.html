@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto my-8 px-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Supplier Credit Matrix</h1>
+            <p class="text-sm text-slate-500">Track pending balances for factory depot supply shipments on credit.</p>
+        </div>
+        
+        <div class="bg-red-50 border border-red-100 rounded-xl px-5 py-3 text-right">
+            <span class="block text-xs font-bold text-red-600 uppercase tracking-wider">Total Outstanding Debt</span>
+            <span class="text-2xl font-black text-red-700">UGX {{ total_debt|floatformat:0 }}</span>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                        <th class="p-4">Date Logged</th>
+                        <th class="p-4">Supplier Name</th>
+                        <th class="p-4">Invoice ID</th>
+                        <th class="p-4 text-right">Total Order Cost</th>
+                        <th class="p-4 text-right">Amount Paid</th>
+                        <th class="p-4 text-right text-red-600">Balance Due</th>
+                        <th class="p-4 text-center">Payment Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+                    {% for order in orders %}
+                    <tr class="hover:bg-slate-50/70 transition-all">
+                        <td class="p-4 whitespace-nowrap text-xs text-slate-500">
+                            {{ order.created_at|date:"M d, Y · H:i" }}
+                        </td>
+                        <td class="p-4 font-semibold text-slate-900">
+                            {{ order.supplier.name }}
+                        </td>
+                        <td class="p-4 font-mono text-xs text-slate-600">
+                            {{ order.invoice_number }}
+                        </td>
+                        <td class="p-4 text-right font-medium">
+                            UGX {{ order.total_amount|floatformat:0 }}
+                        </td>
+                        <td class="p-4 text-right text-green-600 font-medium">
+                            UGX {{ order.amount_paid|floatformat:0 }}
+                        </td>
+                        <td class="p-4 text-right font-bold text-red-600 bg-red-50/30">
+                            UGX {{ order.balance|floatformat:0 }}
+                        </td>
+                        <td class="p-4 text-center whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide
+                                {% if order.payment_status == 'PAID' %}bg-green-100 text-green-800
+                                {% elif order.payment_status == 'PARTIAL' %}bg-amber-100 text-amber-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ order.payment_status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="p-8 text-center text-slate-400">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <i class="fa-solid fa-square-check text-3xl text-slate-300"></i>
+                                <p class="text-sm">Excellent! No outstanding supplier debt records found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
