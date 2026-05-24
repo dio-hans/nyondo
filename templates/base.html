@@ -43,7 +43,7 @@
                 </a>
                 {% endif %}
 
-                {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' or request.user.role == 'SCHEMES' %}
+                {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
                 <a href="#" class="px-4 py-2 text-sm font-medium rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-2">
                     <i class="fa-solid fa-piggy-bank text-blue-600"></i> Schemes
                 </a>

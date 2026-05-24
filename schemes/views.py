@@ -61,7 +61,7 @@ def enroll_customer(request):
 
     # Query all standard base store profiles to populate enrollment form
     all_base_customers = Customer.objects.all()
-    return render(request, 'credit/enroll.html', {'customers': all_base_customers})
+    return render(request, 'schemes/enroll_member.html', {'customers': all_base_customers})
 
 
 # 2. RECORD CUSTOMER DEPOSIT AGAINST SCHEME
@@ -93,7 +93,7 @@ def record_deposit(request, customer_id):
         messages.success(request, f"UGX {amount:,} safely banked. Receipt No: {deposit.receipt_number}")
         return redirect('customer_detail', customer_id=scheme.id)
 
-    return render(request, 'credit/deposit.html', {'scheme': scheme})
+    return render(request, 'schemes/make_deposit.html', {'scheme': scheme})
 
 
 # 3. CUSTOMER ACCOUNT SCHEME LEDGER DETAILS
@@ -108,10 +108,10 @@ def customer_detail(request, customer_id):
         'deposits': deposits,
         'total_balance': scheme.current_balance
     }
-    return render(request, 'credit/customer_detail.html', context)
+    return render(request, 'schemes/customer_detail.html', context)
 
 
 # 4. COMPLEMENTARY LIST VIEW TO RESOLVE SYSTEM ROUTING
 def schemes_list(request):
     active_schemes = SavingsScheme.objects.all().select_related('customer')
-    return render(request, 'credit/schemes_list.html', {'schemes': active_schemes})
+    return render(request, 'schemes/schemes_list.html', {'schemes': active_schemes})
