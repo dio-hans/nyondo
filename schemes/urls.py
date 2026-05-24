@@ -8,5 +8,6 @@ urlpatterns = [
     path('deposit/<int:customer_id>/', views.record_deposit, name='record_deposit'),
 
     path('customer/<int:customer_id>/', views.customer_detail, name='customer_detail'),
+    path('receipt/<int:deposit_id>/', views.view_receipt, name='view_receipt'),
 
 ]

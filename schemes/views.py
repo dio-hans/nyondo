@@ -91,7 +91,7 @@ def record_deposit(request, customer_id):
         scheme.save()
 
         messages.success(request, f"UGX {amount:,} safely banked. Receipt No: {deposit.receipt_number}")
-        return redirect('customer_detail', customer_id=scheme.id)
+    redirect('view_receipt', deposit_id=deposit.id)
 
     return render(request, 'schemes/make_deposit.html', {'scheme': scheme})
 
@@ -115,3 +115,16 @@ def customer_detail(request, customer_id):
 def schemes_list(request):
     active_schemes = SavingsScheme.objects.all().select_related('customer')
     return render(request, 'schemes/schemes_list.html', {'schemes': active_schemes})
+
+# Add at the bottom of schemes/views.py
+
+def view_receipt(request, deposit_id):
+    # Fetch the exact deposit transaction or throw a 404 error if it doesn't exist
+    deposit = get_object_or_404(SchemeDeposit, id=deposit_id)
+    
+    context = {
+        'deposit': deposit,
+        'scheme': deposit.scheme,
+        'customer': deposit.scheme.customer
+    }
+    return render(request, 'schemes/member_receipt.html', context)
