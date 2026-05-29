@@ -2,21 +2,13 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 
 from django.db import transaction
+from .forms import UnifiedPurchaseForm
+from .models import PurchaseOrder, PurchaseItem
+from inventory.models import Product, StockMovement
+
 from django.db.models import Sum
 
-from .models import (
-    Supplier,
-    PurchaseOrder,
-    PurchaseItem
-)
-
-from inventory.models import (
-    Product,
-    StockMovement
-)
-
-
-# RECORD PURCHASE
+from .models import Supplier
 
 def record_purchase(request):
 
@@ -305,3 +297,74 @@ def procurement_dashboard(request):
         'recent_items': recent_items,
     }
     return render(request, 'procurement/dashboard.html', context)
+
+def record_procurement_entry(request):
+    if request.method == 'POST':
+        form = UnifiedPurchaseForm(request.POST)
+        if form.is_valid():
+            try:
+                # Wrap everything in a database transaction block so it never corrupts data on crash
+                with transaction.atomic():
+                    product = form.cleaned_data['product']
+                    quantity = form.cleaned_data['quantity']
+                    unit_cost = form.cleaned_data['unit_cost']
+                    payment_type = form.cleaned_data['payment_type']
+                    
+                    total_calculated_amount = quantity * unit_cost
+                    amount_paid = form.cleaned_data.get('amount_paid') or 0
+                    
+                    if payment_type == 'CASH':
+                        amount_paid = total_calculated_amount
+                    
+                    balance_outstanding = total_calculated_amount - amount_paid
+                    
+                    # 1. Determine Payment Status
+                    if balance_outstanding == 0:
+                        status = 'PAID'
+                    elif amount_paid > 0:
+                        status = 'PARTIAL'
+                    else:
+                        status = 'PENDING'
+                    
+                    # 2. Write the PurchaseOrder Registry entry
+                    purchase_order = PurchaseOrder.objects.create(
+                        supplier=form.cleaned_data['supplier'],
+                        invoice_number=form.cleaned_data['invoice_number'],
+                        total_amount=total_calculated_amount,
+                        amount_paid=amount_paid,
+                        balance=balance_outstanding,
+                        payment_status=status,
+                        notes=form.cleaned_data['notes']
+                    )
+                    
+                    # 3. Write individual Line Item entry
+                    PurchaseItem.objects.create(
+                        purchase_order=purchase_order,
+                        product=product,
+                        quantity=quantity,
+                        unit_cost=unit_cost,
+                        subtotal=total_calculated_amount
+                    )
+                    
+                    # 4. CRITICAL CORE SYNC: Update the stock sheets in the Inventory app directly
+                    product.current_stock += quantity
+                    product.save()
+                    
+                    # 5. Log internal audit history trail
+                    StockMovement.objects.create(
+                        product=product,
+                        transaction_type='IN',
+                        quantity=quantity,
+                        reference=f"PUR-{purchase_order.invoice_number}",
+                        notes=f"Procured via inbound shipment. Payment scheme configuration: {payment_type}"
+                    )
+                    
+                messages.success(request, f"Shipment ingested successfully! {quantity} units added directly to hardware inventory registry.")
+                return redirect('procurement_dashboard') # Update this match string name to your main view
+                
+            except Exception as e:
+                messages.error(request, f"System compilation failure during database save action nodes: {str(e)}")
+    else:
+        form = UnifiedPurchaseForm()
+        
+    return render(request, 'procurement/record_purchase.html', {'form': form})

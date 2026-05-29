@@ -1,0 +1,51 @@
+
+{% extends 'base.html' %}
+{% block title %}Pending Order Queue | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-6 space-y-6">
+    
+    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div>
+            <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider mb-1">🍽️ Open Tables & Orders</h2>
+            <p class="text-xs text-slate-400 font-medium">Click on any pending queue ticket block below to process final cashier collection clearance.</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'record_sale' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black px-4 py-2 rounded-lg uppercase tracking-wider transition-all shadow-sm">
+                Record New Sale
+            </a>
+        </div>
+    </div>
+
+    <div class="flex flex-wrap gap-4" id="pending-orders-tray">
+        {% for order in pending_orders %}
+            <div class="w-36 h-36 bg-[#1e1f29] border border-slate-800 rounded-lg p-4 flex flex-col justify-between items-center text-center shadow-md relative group hover:bg-[#252633] transition-all">
+                
+                <div class="text-xs font-black tracking-widest text-slate-200 uppercase mt-1">
+                    {% if order.customer.name %}
+                        {{ order.customer.name|truncatechars:12 }}
+                    {% else %}
+                        T-{{ order.id }}
+                    {% endif %}
+                </div>
+
+                <div class="text-sm font-mono font-black text-white group-hover:text-emerald-400 transition-colors">
+                    {{ order.total_amount|floatformat:0 }}
+                </div>
+
+                <div class="text-[10px] font-bold text-slate-400 tracking-tight lowercase mb-1">
+                    {% if order.served_by %}
+                        {{ order.served_by.username }}
+                    {% else %}
+                        system
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl p-12 text-center text-xs text-slate-400 font-medium">
+                No active outstanding order slips or table balances currently pending checkout collection.
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

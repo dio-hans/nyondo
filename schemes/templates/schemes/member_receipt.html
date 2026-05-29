@@ -2,32 +2,80 @@
 {% block title %}Temporary Receipt | Nyondo Hardware{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-amber-50/40 border border-amber-200 rounded-xl shadow-sm p-6 relative overflow-hidden" id="print-area">
-    <div class="absolute top-0 right-0 bg-amber-600 text-white font-black text-[9px] uppercase tracking-widest px-4 py-1 rounded-bl-lg shadow-sm">
-        Temporary Receipt
+<div class="max-w-md mx-auto bg-amber-50/30 border border-amber-200 rounded-xl shadow-sm p-6 relative overflow-hidden" id="print-area">
+    
+    <div class="absolute top-0 right-0 bg-slate-900 text-white font-black text-[9px] uppercase tracking-widest px-4 py-1 rounded-bl-lg shadow-sm">
+        PROFORMA
     </div>
 
-    <div class="text-center border-b border-dashed border-amber-200 pb-4">
-        <h3 class="text-sm font-black text-slate-900 tracking-tight">NYONDO GENERAL HARDWARE LTD</h3>
-        <p class="text-[10px] text-amber-800 font-bold tracking-wider uppercase">Salary Earner Scheme Installment Acknowledgement</p>
+    <div class="text-center border-b border-dashed border-amber-300 pb-4">
+        <h3 class="text-sm font-black text-slate-900 tracking-tight uppercase">NYONDO GENERAL HARDWARE LTD</h3>
+        <p class="text-[9px] text-slate-500 font-bold tracking-wider uppercase mt-0.5">Salary Earner Scheme Installment Acknowledgement</p>
     </div>
 
-    <div class="space-y-3 my-6 text-xs font-medium text-slate-700">
-        <div class="flex justify-between"><span class="text-slate-400">Receipt Ref:</span> <span class="font-bold">#TEMP-{{ deposit.id }}</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Date Logged:</span> <span>{{ deposit.created_at|date:"Y-m-d H:i" }}</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Member Name:</span> <span class="font-black text-slate-900 uppercase">{{ deposit.member.full_name }}</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">National NIN:</span> <span class="font-mono tracking-wider">{{ deposit.member.nin_number }}</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Reserved Category:</span> <span class="font-bold text-slate-900">{{ deposit.target_material }}</span></div>
+    <div class="space-y-2.5 my-6 text-xs font-medium text-slate-700">
+        <div class="flex justify-between border-b border-slate-100 pb-1">
+            <span class="text-slate-400">Receipt Ref:</span> 
+            <span class="font-bold font-mono">#{{ deposit.receipt_number }}</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-100 pb-1">
+            <span class="text-slate-400">Date Logged:</span> 
+            <span>{{ deposit.deposited_at|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-100 pb-1">
+            <span class="text-slate-400">Member Name:</span> 
+            <span class="font-black text-slate-900 uppercase">{{ scheme.customer.name }}</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-100 pb-1">
+            <span class="text-slate-400">National NIN:</span> 
+            <span class="font-mono font-bold tracking-wider text-slate-900">{{ scheme.nin }}</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-100 pb-1">
+            <span class="text-slate-400">Reserved Category:</span> 
+            <span class="font-black text-blue-700 uppercase">
+                {% if deposit.material_allocation %}{{ deposit.material_allocation.name }}{% else %}General Scheme Allocation{% endif %}
+            </span>
+        </div>
         
-        <div class="bg-white border border-amber-200 p-3 rounded-lg text-center mt-4">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Amount Credited Today</span>
-            <span class="text-lg font-black text-emerald-700">UGX {{ deposit.amount }}</span>
+        <div class="bg-white border border-amber-200 p-4 rounded-xl shadow-2xs mt-4 space-y-3">
+            <div class="text-center border-b border-slate-100 pb-2">
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Amount Credited Today</span>
+                <span class="text-xl font-black text-emerald-700 font-mono">UGX {{ deposit.amount|floatformat:0 }}</span>
+            </div>
+            
+            <div class="flex justify-between text-[11px] pt-1">
+                <span class="text-slate-400 font-semibold">Previous Ledger Balance:</span>
+                <span class="font-bold text-slate-600 font-mono">UGX {{ scheme.current_balance|add:-deposit.amount|floatformat:0 }}</span>
+            </div>
+            <div class="flex justify-between text-[11px] border-t border-dashed border-slate-100 pt-2 font-black">
+                <span class="text-slate-900">Total Running Balance:</span>
+                <span class="text-slate-950 font-mono bg-amber-100/60 px-1.5 rounded">UGX {{ scheme.current_balance|floatformat:0 }}</span>
+            </div>
         </div>
     </div>
 
-    <p class="text-[9px] text-slate-400 text-center font-medium italic">Note: Goods under this scheme are determined by the current market pricing valuations on the actual day of collection.</p>
+    <div class="border-t border-dashed border-amber-300 pt-4 text-center space-y-3">
+        <p class="text-[9px] text-slate-400 text-center font-semibold italic leading-relaxed">
+            Note: Goods under this scheme are determined by the current market pricing valuations on the actual day of collection. This is an acknowledgment statement, not a final tax invoice.
+        </p>
+        <div class="flex justify-between text-[8px] text-slate-400 font-black uppercase tracking-wider">
+            <span>Served By: {% if scheme.recorded_by %}{{ scheme.recorded_by.username }}{% else %}SYSTEM CLERK{% endif %}</span>
+            <span>THANK YOU</span>
+        </div>
+    </div>
 </div>
+
 <div class="max-w-md mx-auto mt-4">
-    <button onclick="window.print()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 text-xs uppercase tracking-wider rounded-lg transition-all">Print Receipt</button>
+    <button onclick="window.print()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-2.5 text-xs uppercase tracking-wider rounded-lg transition-all shadow-sm flex items-center justify-center gap-2">
+        🖨️ Print Document Receipt
+    </button>
 </div>
+
+<style>
+    @media print {
+        body * { display: none; }
+        #print-area, #print-area * { display: block; }
+        #print-area { max-w: 100%; border: none; background: white; margin: 0; padding: 0; }
+    }
+</style>
 {% endblock %}

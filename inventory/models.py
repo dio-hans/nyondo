@@ -43,6 +43,7 @@ class Product(models.Model):
         blank=True
     )
 
+
     class Unit(models.TextChoices):
 
         PIECE = 'PCS', 'Pieces'
@@ -108,6 +109,7 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
 
 
 class Location(models.Model):

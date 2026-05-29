@@ -1,1 +1,87 @@
 {% extends 'base.html' %}
+{% block title %}Savings Schemes Ledger Registry | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+        <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">
+            <i class="fa-solid fa-piggy-bank text-indigo-600 mr-1"></i> Customer Savings Schemes Registry
+        </h2>
+        <p class="text-xs text-slate-400 font-medium">Active repository of layaway accounts, dynamic material allocations, and customer ledger statuses.</p>
+    </div>
+    <div>
+        <a href="{% url 'enroll_customer' %}" class="inline-block bg-slate-900 text-white px-4 py-2 rounded-md text-[11px] font-black uppercase tracking-wider hover:bg-slate-800 transition shadow-sm">
+            <i class="fa-solid fa-user-plus mr-1"></i> Enroll New Customer
+        </a>
+    </div>
+</div>
+
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
+    <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+        <span class="font-black text-[10px] text-slate-400 uppercase tracking-wider">Monitored Ledger Rows</span>
+        <span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-bold text-[10px]">{{ schemes|length }} Active Accounts</span>
+    </div>
+
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-slate-50/50 border-b border-slate-200 text-[10px] font-bold uppercase text-slate-500">
+                <th class="p-4 pl-6">Customer Details</th>
+                <th class="p-4">NIN Identification</th>
+                <th class="p-4 text-center">Commitment Interval</th>
+                <th class="p-4 text-right">Target Amount</th>
+                <th class="p-4 text-right">Current Balance</th>
+                <th class="p-4 text-center pr-6">System Management</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            {% for scheme in schemes %}
+            <tr class="hover:bg-slate-50/50 transition">
+                <td class="p-4 pl-6">
+                    <span class="font-black text-slate-900 uppercase block">{{ scheme.customer.name }}</span>
+                    <span class="text-[10px] text-slate-400 mt-0.5 block font-mono">{{ scheme.phone_number }}</span>
+                </td>
+                
+                <td class="p-4 font-mono text-slate-500 tracking-wider">
+                    {{ scheme.nin }}
+                </td>
+                
+                <td class="p-4 text-center">
+                    <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded text-[9px] font-black uppercase tracking-wider">
+                        {{ scheme.frequency_commitment }}
+                    </span>
+                </td>
+                
+                <td class="p-4 text-right font-bold text-slate-500">
+                    UGX {{ scheme.total_amount_target|default:"0" }}
+                </td>
+                
+                <td class="p-4 text-right">
+                    <span class="font-black text-emerald-700 text-xs">
+                        UGX {{ scheme.current_balance|default:"0" }}
+                    </span>
+                    {% if scheme.is_price_locked %}
+                        <span class="block text-[8px] font-black text-amber-600 uppercase tracking-tight mt-0.5">🔒 Price Locked Secure</span>
+                    {% endif %}
+                </td>
+                
+                <td class="p-4 text-center pr-6 space-x-2">
+                    <a href="{% url 'record_deposit' scheme.id %}" class="inline-block bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded text-[10px] font-bold uppercase hover:bg-emerald-100 transition">
+                        <i class="fa-solid fa-plus-minus mr-0.5"></i> Add Cash
+                    </a>
+                    <a href="{% url 'customer_detail' scheme.id %}" class="inline-block bg-slate-900 text-white px-2.5 py-1 rounded text-[10px] font-bold uppercase hover:bg-slate-800 transition shadow-sm">
+                        <i class="fa-solid fa-folder-open mr-0.5"></i> Audit Ledger
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide">
+                    <i class="fa-solid fa-folder-open text-slate-300 text-lg block mb-2"></i>
+                    No active layout savings records found in runtime tables.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

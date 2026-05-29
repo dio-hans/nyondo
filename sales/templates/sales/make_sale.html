@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block title %}POS Terminal | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-120px)]">
+
+    <div class="lg:col-span-2 flex flex-col h-full space-y-4">
+        <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-center justify-between shadow-2xs">
+            <div class="w-full sm:w-1/2">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Active Customer Link</label>
+                <select id="pos-customer-select" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:outline-none">
+                    {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.get_customer_type_display }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <input type="text" id="product-search" onkeyup="filterSearch()" placeholder="Start typing to search stock..." class="w-full sm:w-1/2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none placeholder-slate-400">
+        </div>
+
+        <div class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 pr-2" id="hardware-grid">
+            {% for product in products %}
+                <div class="product-card bg-slate-800 hover:bg-slate-700 text-white rounded-xl p-4 flex flex-col justify-between cursor-pointer transition-all border border-slate-700/50 relative overflow-hidden active:scale-98" 
+                     data-id="{{ product.id }}" 
+                     data-name="{{ product.name }}" 
+                     data-price="{{ product.selling_price }}" 
+                     data-stock="{{ product.current_stock }}"
+                     onclick="openQtyModal(this)">
+                    <div class="absolute top-1 right-2 text-[9px] text-slate-400 font-bold font-mono">Stock: {{ product.current_stock }}</div>
+                    <h4 class="text-xs font-black uppercase tracking-tight mt-2 text-slate-100 leading-snug product-title-name">{{ product.name }}</h4>
+                    <div class="text-right mt-4 border-t border-slate-700 pt-2">
+                        <span class="text-xs font-mono font-black text-emerald-400">UGX {{ product.selling_price|floatformat:0 }}</span>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-full bg-slate-50 border border-dashed border-slate-200 rounded-xl p-12 text-center text-xs text-slate-400 font-medium">
+                    No hardware materials matching minimum stock rules available.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-xl shadow-2xs p-4 flex flex-col h-full justify-between">
+        <div>
+            <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest" id="running-terminal-title">Active Invoice</h3>
+                <span class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-black font-mono" id="cart-counter">0 Items</span>
+            </div>
+            
+            <div id="cart-items-hook" class="divide-y divide-slate-100 overflow-y-auto max-h-[calc(100vh-340px)] pr-1">
+                <p id="empty-cart-notice" class="text-center text-slate-400 text-xs font-medium py-12 italic">Cart empty. Tap products to add them.</p>
+            </div>
+        </div>
+
+        <div class="border-t border-slate-100 pt-4 space-y-3">
+            <div class="flex justify-between items-center font-black text-slate-900 text-xs uppercase tracking-wider px-1">
+                <span>Estimated Subtotal:</span>
+                <span id="cart-subtotal-display" class="font-mono text-sm text-slate-950 bg-slate-100 px-2 py-1 rounded">UGX 0</span>
+            </div>
+            
+            <form id="checkout-passthrough-form" method="POST" action="{% url 'review_checkout' %}">
+                {% csrf_token %}
+                <input type="hidden" name="customer" id="passthrough-customer-id">
+                <input type="hidden" name="cart_json" id="passthrough-cart-json">
+                <button type="button" onclick="submitPOSCart()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2">
+                    🛒 Add To Cart & Continue
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="qty-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-sm w-full p-6 space-y-4 shadow-xl">
+        <div>
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Adjust Item Units</span>
+            <h3 id="modal-product-name" class="text-sm font-black text-slate-900 uppercase tracking-tight mt-0.5">Product Title</h3>
+        </div>
+        
+        <div class="space-y-1">
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Purchase Quantity</label>
+            <div class="flex border border-slate-200 rounded-lg overflow-hidden font-mono font-bold">
+                <button type="button" onclick="stepQty(-1)" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 border-r border-slate-200 text-slate-600 text-sm">━</button>
+                <input type="number" id="modal-qty-input" value="1" min="1" class="w-full text-center text-xs font-bold text-slate-800 bg-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                <button type="button" onclick="stepQty(1)" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 border-l border-slate-200 text-slate-600 text-sm">╋</button>
+            </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+            <button type="button" onclick="closeQtyModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition-all">Cancel</button>
+            <button type="button" onclick="commitCartLine()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-black py-2 rounded-lg text-xs uppercase tracking-wider transition-all shadow-sm">Add to Cart</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentCart = {}; // Format: { product_id: { name, price, qty, stock } }
+    let selectedActiveProduct = null;
+
+    function filterSearch() {
+        let input = document.getElementById('product-search').value.toLowerCase();
+        let cards = document.getElementsByClassName('product-card');
+        for (let i = 0; i < cards.length; i++) {
+            let title = cards[i].querySelector('.product-title-name').innerText.toLowerCase();
+            cards[i].style.display = title.includes(input) ? "" : "none";
+        }
+    }
+
+    function openQtyModal(cardElement) {
+        selectedActiveProduct = {
+            id: cardElement.getAttribute('data-id'),
+            name: cardElement.getAttribute('data-name'),
+            price: parseFloat(cardElement.getAttribute('data-price')),
+            stock: parseInt(cardElement.getAttribute('data-stock'))
+        };
+        
+        document.getElementById('modal-product-name').innerText = selectedActiveProduct.name;
+        // Check if item already exists in the cart to maintain active quantity state
+        document.getElementById('modal-qty-input').value = currentCart[selectedActiveProduct.id] ? currentCart[selectedActiveProduct.id].qty : 1;
+        document.getElementById('qty-modal').style.display = 'flex';
+    }
+
+     Kakao: function closeQtyModal() {
+        document.getElementById('qty-modal').style.display = 'none';
+    }
+
+    function stepQty(amount) {
+        let input = document.getElementById('modal-qty-input');
+        let val = parseInt(input.value) + amount;
+        if (val >= 1) input.value = val;
+    }
+
+    function commitCartLine() {
+        let qty = parseInt(document.getElementById('modal-qty-input').value) || 1;
+        if (qty > selectedActiveProduct.stock) {
+            alert("Requested units exceed available inventory stock pools!");
+            return;
+        }
+        
+        currentCart[selectedActiveProduct.id] = {
+            name: selectedActiveProduct.name,
+            price: selectedActiveProduct.price,
+            qty: qty,
+            stock: selectedActiveProduct.stock
+        };
+        
+        closeQtyModal();
+        renderSidebarCart();
+    }
+
+    function dropCartLine(id) {
+        delete currentCart[id];
+        renderSidebarCart();
+    }
+
+    function renderSidebarCart() {
+        const hook = document.getElementById('cart-items-hook');
+        const emptyNotice = document.getElementById('empty-cart-notice');
+        const keys = Object.keys(currentCart);
+        
+        hook.innerHTML = "";
+        if (keys.length === 0) {
+            hook.appendChild(emptyNotice);
+            document.getElementById('cart-counter').innerText = "0 Items";
+            document.getElementById('cart-subtotal-display').innerText = "UGX 0";
+            return;
+        }
+        
+        let subtotal = 0;
+        let itemsCount = 0;
+        
+        keys.forEach(id => {
+            let item = currentCart[id];
+            let lineCost = item.price * item.qty;
+            subtotal += lineCost;
+            itemsCount += item.qty;
+            
+            let div = document.createElement('div');
+            div.className = "flex items-center justify-between py-2.5 text-xs text-slate-700 font-medium";
+            div.innerHTML = `
+                <div class="space-y-0.5 w-2/3 pr-2">
+                    <h5 class="font-bold text-slate-900 uppercase tracking-tight truncate">${item.name}</h5>
+                    <p class="text-[10px] text-slate-400 font-mono font-bold">${item.qty} pcs × UGX ${item.price.toLocaleString()}</p>
+                </div>
+                <div class="flex items-center gap-3 font-mono font-bold text-slate-900">
+                    <span>UGX ${lineCost.toLocaleString()}</span>
+                    <button type="button" onclick="dropCartLine('${id}')" class="text-rose-500 hover:text-rose-700 text-sm">✕</button>
+                </div>
+            `;
+            hook.appendChild(div);
+        });
+        
+        document.getElementById('cart-counter').innerText = `${itemsCount} Items`;
+        document.getElementById('cart-subtotal-display').innerText = `UGX ${subtotal.toLocaleString()}`;
+    }
+
+    function submitPOSCart() {
+        const customerSelect = document.getElementById('pos-customer-select');
+        const keys = Object.keys(currentCart);
+        
+        if (!customerSelect.value) {
+            alert("Please bind an active customer profile to continue.");
+            return;
+        }
+        if (keys.length === 0) {
+            alert("Your running order card registry checkout is completely empty.");
+            return;
+        }
+        
+        // Flatten cart values into a light JSON packet structure
+        let flatData = keys.map(key => ({ id: key, qty: currentCart[key].qty }));
+        
+        document.getElementById('passthrough-customer-id').value = customerSelect.value;
+        document.getElementById('passthrough-cart-json').value = JSON.stringify(flatData);
+        document.getElementById('checkout-passthrough-form').submit();
+    }
+</script>
+{% endblock %}

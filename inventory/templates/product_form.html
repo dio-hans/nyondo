@@ -8,7 +8,9 @@
         <a href="{% url 'product_list' %}" class="text-xs font-bold text-blue-600 hover:underline">
             <i class="fa-solid fa-arrow-left mr-1"></i> Back to Warehouse Inventory
         </a>
-        <h1 class="text-xl font-black text-slate-900 uppercase tracking-tight mt-2">Register Factory Supply Arrival</h1>
+        <h1 class="text-xl font-black text-slate-900 uppercase tracking-tight mt-2">
+            {{ product|yesno:"Modify Product Details,Register Factory Supply Arrival" }}
+        </h1>
         <p class="text-xs text-slate-500 font-medium">Log stock details along with pre-calculated transactional cost values.</p>
     </div>
 
@@ -17,32 +19,42 @@
         
         <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Material Item Description</label>
-            <input type="text" name="name" required placeholder="e.g., Cement (CEM II/N 42.5N)" 
+            <input type="text" name="name" value="{{ product.name|default:'' }}" required placeholder="e.g., Cement (CEM II/N 42.5N)" 
                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none">
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Arriving Stock Count</label>
-                <input type="number" name="current_stock" min="1" required placeholder="e.g., 200" 
+                <input type="number" name="current_stock" value="{{ product.current_stock|default:'' }}" min="1" required placeholder="e.g., 200" 
                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none">
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Safety Alert Threshold</label>
-                <input type="number" name="reorder_level" min="0" required placeholder="e.g., 20" 
+                <input type="number" name="reorder_level" value="{{ product.reorder_level|default:'10' }}" min="0" required placeholder="e.g., 20" 
                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none">
             </div>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Unit of Measure (UOM)</label>
+            <select name="unit_of_measure" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none">
+        <option value="BAG" {% if product.unit_of_measure == 'BAG' %}selected{% endif %}>Bags (Cement)</option>
+        <option value="PCS" {% if product.unit_of_measure == 'PCS' or not product %}selected{% endif %}>Pieces / Bars (Pcs)</option>
+        <option value="KGS" {% if product.unit_of_measure == 'KGS' %}selected{% endif %}>Kilograms (Kgs)</option>
+        <option value="PKT" {% if product.unit_of_measure == 'PKT' %}selected{% endif %}>5KG Packet (Nails)</option>
+    </select>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Unit Cost (UGX)</label>
-                <input type="number" name="cost_price" id="cost_price" min="0" required placeholder="Factory Cost Price" 
+                <input type="number" name="cost_price" id="cost_price" value="{{ product.cost_price|default:'' }}" min="0" required placeholder="Factory Cost Price" 
                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none">
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Predetermined Retail Price (UGX)</label>
-                <input type="number" name="selling_price" id="selling_price" min="0" required placeholder="Selling Price" 
+                <input type="number" name="selling_price" id="selling_price" value="{{ product.selling_price|default:'' }}" min="0" required placeholder="Selling Price" 
                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none">
             </div>
         </div>
@@ -77,5 +89,7 @@
             submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     }
+    // Fire validation right away on load if values exist (when editing)
+    document.addEventListener("DOMContentLoaded", validatePricing);
 </script>
 {% endblock %}

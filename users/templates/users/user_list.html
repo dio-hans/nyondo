@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Accounts Registry | Nyondo Stock{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Staff Profiling & Roster</h1>
+            <p class="text-sm text-slate-500">Access matrices, system permissions, and terminal account constraints.</p>
+        </div>
+        <div>
+            <a href="{% url 'register_user' %}" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-lg uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-user-plus text-[10px]"></i> Register New Staff
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="space-y-1.5">
+            {% for message in messages %}
+                <div class="p-3 rounded-lg text-[11px] font-bold uppercase tracking-wide border {% if 'success' in message.tags %}bg-emerald-50 text-emerald-700 border-emerald-100{% else %}bg-red-50 text-red-700 border-red-100{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest">Active Terminal Operational Nodes</h3>
+            <span class="text-[10px] font-mono font-black px-2 py-0.5 bg-slate-200 text-slate-700 rounded-sm uppercase">{{ system_users.count }} Total Users</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-400 font-bold border-b border-slate-200 text-[10px] uppercase tracking-wider">
+                        <th class="p-4">Username / Identity</th>
+                        <th class="p-4">Employee Token ID</th>
+                        <th class="p-4">Assigned Role Authority</th>
+                        <th class="p-4">Contact Gateway</th>
+                        <th class="p-4">System State</th>
+                        <th class="p-4 text-right">Access Controls</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for staff in system_users %}
+                        <tr class="hover:bg-slate-50/80 transition-all">
+                            <td class="p-4 font-bold text-slate-900 uppercase tracking-wide">{{ staff.username }}</td>
+                            <td class="p-4 font-mono text-slate-500 font-bold">{{ staff.employee_id|default:"SYS-ROOT" }}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold 
+                                    {% if staff.role == 'ADMIN' %}bg-purple-100 text-purple-800
+                                    {% elif staff.role == 'MANAGER' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ staff.get_role_display }}
+                                </span>
+                            </td>
+                            <td class="p-4 font-mono text-slate-500">{{ staff.contact|default:"--" }}</td>
+                            <td class="p-4">
+                                {% if staff.is_active %}
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 uppercase">Active</span>
+                                {% else %}
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 uppercase">Suspended</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 text-right">
+                                {% if staff.id == request.user.id %}
+                                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-wide italic">Self Node</span>
+                                {% else %}
+                                    <a href="{% url 'toggle_user_status' staff.id %}" 
+                                       class="px-2.5 py-1 text-[10px] font-black rounded-md uppercase tracking-wider transition-all shadow-2xs border
+                                       {% if staff.is_active %} border-red-200 bg-red-50 hover:bg-red-100 text-red-700 {% else %} border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 {% endif %}">
+                                        {% if staff.is_active %}Revoke Access{% else %}Grant Access{% endif %}
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

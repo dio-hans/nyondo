@@ -1,0 +1,62 @@
+    {% extends 'base.html' %}
+    {% block title %}Verify Invoice Checkout | Nyondo Hardware{% endblock %}
+
+    {% block content %}
+    <div class="max-w-xl mx-auto bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-6">
+        <div>
+            <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider mb-1">Confirm POS Order</h2>
+            <p class="text-xs text-slate-400 font-medium">Verify structural transport logistics boundaries and payment methods.</p>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl text-xs space-y-1.5 font-medium text-slate-700">
+            <div class="flex justify-between"><span class="text-slate-400">Linked Customer:</span> <span class="font-black text-slate-900 uppercase">{{ customer.name }}</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Account Classification:</span> <span class="font-bold text-blue-700">{{ customer.get_customer_type_display }}</span></div>
+        </div>
+
+        <div class="space-y-2">
+            <span class="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Order Items Line Review</span>
+            <div class="border border-slate-100 rounded-lg p-3 divide-y divide-slate-100 bg-slate-50/50 text-xs">
+                {% for item in review_items %}
+                    <div class="flex justify-between items-center py-2 font-medium">
+                        <span class="font-bold text-slate-900 uppercase">{{ item.product.name }} <span class="text-slate-400 font-mono font-bold text-[11px]">×{{ item.quantity }}</span></span>
+                        <span class="font-mono font-bold text-slate-800">UGX {{ item.subtotal|floatformat:0 }}</span>
+                    </div>
+                {% endfor %}
+                <div class="flex justify-between items-center pt-2 font-black text-slate-900 text-xs uppercase tracking-wide">
+                    <span>Items Subtotal:</span>
+                    <span class="font-mono">UGX {{ subtotal|floatformat:0 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" action="" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="customer" value="{{ customer.id }}">
+            <input type="hidden" name="cart_json" value="{{ cart_json }}">
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Settlement Method</label>
+                    <select name="payment_method" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:outline-none">
+                        <option value="CASH">Hard Cash Exchange</option>
+                        <option value="MOBILE">Mobile Money (Airtel/MTN)</option>
+                        <option value="BANK">Direct Bank Wire Transfer</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Site Radius Distance (KM)</label>
+                    <input type="number" step="0.1" name="distance" min="0" required placeholder="Distance to site" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="bg-amber-50/50 border border-amber-200 rounded-xl p-3 text-[10px] text-amber-800 font-medium leading-relaxed">
+                
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <a href="{% url 'review_checkout' %}" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all text-center">Modify Cart</a>
+                <button type="submit" name="confirm_order" class="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md"> Finalize & Post Sale</button>
+            </div>
+        </form>
+    </div>
+    {% endblock %}

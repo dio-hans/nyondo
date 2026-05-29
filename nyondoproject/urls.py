@@ -21,10 +21,7 @@ from django.shortcuts import redirect
 urlpatterns = [
   # Admin Interface Access
     path('admin/', admin.site.urls),
-    
-    # Root URL redirects straight to login page
-    path('', lambda request: redirect('user_login', permanent=False)),
-    
+ 
     # Core Application Modules Included
     path('inventory/', include('inventory.urls')),
     path('sales/', include('sales.urls')),

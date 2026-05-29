@@ -1,86 +1,139 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
-from django.db import transaction # For atomic transactions
-from django.db.models import Sum # For faster reporting
-
+from django.db import transaction
+from django.db.models import Sum
+from decimal import Decimal
 from inventory.models import Product, StockMovement
-#Changed 'Sale' to 'SalesOrder' to match your models.py
-from .models import SalesOrder 
+from .models import SalesOrder, SalesOrderItem, Customer, Receipt
+import json
+
 
 def make_sale(request):
-    products = Product.objects.filter(current_stock__gt=0) # Only show products in stock
+    """ The Tile Grid Registry Terminal Workspace """
+    customers = Customer.objects.all().order_by('name')
+    products = Product.objects.filter(current_stock__gt=0).order_by('name')
+    
+    context = {
+        'customers': customers,
+        'products': products,
+    }
+    return render(request, 'sales/make_sale.html', context)
 
-    if request.method == 'POST':
-        try:
-            product_id = request.POST.get('product')
-            # Handle empty inputs to prevent crashes
-            quantity_sold = int(request.POST.get('quantity') or 0)
-            distance = float(request.POST.get('distance') or 0)
 
-            if quantity_sold <= 0:
-                messages.error(request, "Quantity must be greater than zero.")
-                return redirect('make_sale')
-
-            product = get_object_or_404(Product, id=product_id)
-
-            # 1. STOCK VALIDATION
-            if product.current_stock < quantity_sold:
-                messages.error(request, f"Insufficient stock. {product.product_name} only has {product.current_stock} units.")
-                return redirect('make_sale')
-
-            # 2. CALCULATION
-            total_price = product.selling_price * quantity_sold
-            
-            # Transport Logic (The Nyondo Rule)
-            if distance <= 10 and total_price >= 500000:
-                transport_fee = 0
-            else:
-                transport_fee = 30000
-            
-            final_amount = total_price + transport_fee
-
-            # 3. ATOMIC EXECUTION (Sharp Practice)
-            with transaction.atomic():
-                # Update Inventory
-                product.current_stock -= quantity_sold
-                product.save()
-
-                # QUERY METADATA FIXED: Using SalesOrder instead of Sale
-                SalesOrder.objects.create(
-                    product=product,
-                    quantity=quantity_sold,
-                    total_price=total_price,
-                    transport_fee=transport_fee,
-                    final_amount=final_amount,
-                    sale_date=timezone.now()
-                )
-
-                # Create Stock Movement (Audit Trail)
-                StockMovement.objects.create(
-                    product=product,
-                    transaction_type='OUT',
-                    quantity=quantity_sold,
-                    notes=f'Sold {quantity_sold} units'
-                )
-
-            messages.success(request, f"Sale recorded! Total: UGX {final_amount:,}")
-            return redirect('sale_history')
-
-        except Exception as e:
-            messages.error(request, f"An error occurred: {e}")
+def review_checkout(request):
+    """ Intermediate Confirmation Step to compute transport rules and commit """
+    if request.method != 'POST':
+        return redirect('order_queue')
+        
+    customer_id = request.POST.get('customer')
+    # Read the packed JSON cart dictionary from the frontend
+    cart_data_raw = request.POST.get('cart_json')
+    
+    if not customer_id or not cart_data_raw:
+        messages.error(request, "Invalid checkout parameters submitted.")
+        return redirect('make_sale')
+        
+    customer = get_object_or_404(Customer, id=customer_id)
+    cart = json.loads(cart_data_raw)  # Format: [{"id": "1", "qty": 2}, ...]
+    
+    review_items = []
+    subtotal = Decimal('0.00')
+    
+    # Pre-calculate line allocations for review validation
+    for item in cart:
+        product = get_object_or_404(Product, id=item['id'])
+        qty = int(item['qty'])
+        
+        if qty > product.current_stock:
+            messages.error(request, f"Stock clash! {product.name} only has {product.current_stock} left.")
             return redirect('make_sale')
-
-    return render(request, 'sales/make_sale.html', {'products': products})
+            
+        line_subtotal = Decimal(str(product.selling_price)) * qty
+        subtotal += line_subtotal
+        
+        review_items.append({
+            'product': product,
+            'quantity': qty,
+            'subtotal': line_subtotal
+        })
+        
+    # Process final operational order confirmation
+    if 'confirm_order' in request.POST:
+        distance = float(request.POST.get('distance') or 0)
+        payment_method = request.POST.get('payment_method', 'CASH')
+        
+        # Apply the Official Nyondo Transport Rule
+        if distance <= 10 and subtotal >= Decimal('500000'):
+            transport_fee = Decimal('0.00')
+        else:
+            transport_fee = Decimal('30000.00')
+            
+        try:
+            with transaction.atomic():
+                sales_order = SalesOrder.objects.create(
+                    customer=customer,
+                    payment_method=payment_method,
+                    status='PENDING',
+                    subtotal=subtotal,
+                    transport_fee=transport_fee,
+                    total_amount=subtotal + transport_fee,
+                    served_by=request.user if request.user.is_authenticated else None
+                )
+                
+                for item in review_items:
+                    # Deduct stock totals
+                    prod = item['product']
+                    prod.current_stock -= item['quantity']
+                    prod.save()
+                    
+                    # Create child row lines
+                    SalesOrderItem.objects.create(
+                        sales_order=sales_order,
+                        product=prod,
+                        quantity=item['quantity'],
+                        unit_price=prod.selling_price,
+                        subtotal=item['subtotal']
+                    )
+                    
+                    # Save audit movement trail
+                    StockMovement.objects.create(
+                        product=prod,
+                        transaction_type='OUT',
+                        quantity=item['quantity'],
+                        notes=f"POS Cart Checkout Order SO-{sales_order.id}"
+                    )
+                    
+                # Generate unique POS code asset token
+                Receipt.objects.create(
+                    sales_order=sales_order,
+                    receipt_number=f"NYD-{sales_order.id}-{int(timezone.now().timestamp())}",
+                    recorded_by=request.user if request.user.is_authenticated else None
+                )
+                
+            messages.success(request, f"Sales Order SO-{sales_order.id} processed successfully!")
+            return redirect('order_queue')
+            
+        except Exception as e:
+            messages.error(request, f"Transaction error encountered: {e}")
+            return redirect('record_sale')
+            
+    context = {
+        'customer': customer,
+        'review_items': review_items,
+        'subtotal': subtotal,
+        'cart_json': cart_data_raw
+    }
+    return render(request, 'sales/review_checkout.html', context)
 
 
 def sale_history(request):
-    # QUERY METADATA FIXED: Using SalesOrder instead of Sale
-    sales = SalesOrder.objects.all().select_related('product').order_by('-sale_date')
+    # 1. FIXED: Removed .select_related('product') to stop the hidden join crash
+    sales = SalesOrder.objects.all().order_by('-order_date')
     
-    # Sharp Logic: Let the Database calculate totals (Aggregates)
+    # 2. FIXED: Changed 'final_amount' to 'total_amount' to match your database choices
     totals = sales.aggregate(
-        rev=Sum('final_amount'),
+        rev=Sum('total_amount'),
         trans=Sum('transport_fee')
     )
 
@@ -90,3 +143,13 @@ def sale_history(request):
         'total_transport': totals['trans'] or 0
     }
     return render(request, 'sales/history.html', context)
+
+def order_queue_dashboard(request):
+    """ Displays all open orders waiting for cashier payment clearance """
+    # Fetch orders where status is PENDING or waiting to be cleared
+    pending_orders = SalesOrder.objects.filter(status='PENDING').select_related('customer', 'served_by').order_by('id')
+    
+    context = {
+        'pending_orders': pending_orders,
+    }
+    return render(request, 'sales/order_queue.html', context)

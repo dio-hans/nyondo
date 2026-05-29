@@ -9,6 +9,7 @@ from django.db.models import (
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.decorators import login_required
+from users.decorators import admin_required 
 
 from sales.models import (
     SalesOrder,
@@ -25,6 +26,7 @@ from schemes.models import SchemeDeposit  # Added for scheme collection reportin
 # =========================================
 
 @login_required
+@admin_required
 def business_dashboard(request):
 
     today = timezone.now().date()
@@ -225,7 +227,8 @@ def business_dashboard(request):
 # =========================================
 # FINANCIAL STATEMENT
 # =========================================
-
+@login_required
+@admin_required
 def financial_statement_view(request):
 
     completed_sales = SalesOrder.objects.filter(
@@ -290,3 +293,4 @@ def financial_statement_view(request):
         'reports/financial_statement.html',
         context
     )
+

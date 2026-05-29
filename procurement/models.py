@@ -124,6 +124,10 @@ class PurchaseItem(models.Model):
         decimal_places=2
     )
 
+    
+
+    
+
     def __str__(self):
 
         return self.product.name

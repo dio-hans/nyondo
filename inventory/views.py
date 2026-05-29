@@ -45,21 +45,86 @@ def inventory_dashboard(request):
     return render(request, 'dashboard.html', context)
 
 
+def product_save(request, product_id=None):
+    # 1. SETUP: If an ID is passed, we are EDITING. If not, we are CREATING.
+    if product_id:
+        product = get_object_or_404(Product, id=product_id)
+        page_title = f"Modify Item: {product.name}"
+    else:
+        product = None
+        page_title = "Register New Inventory Product"
+
+    # 2. POST FLOW: Saving the form data
+    if request.method == "POST":
+        name = request.POST.get('name', '').strip()
+        cost = float(request.POST.get('cost_price', 0))
+        price = float(request.POST.get('selling_price', 0))
+        uom = request.POST.get('unit_of_measure', '')
+        current_stock = int(request.POST.get('current_stock', 0))
+        reorder_lvl = int(request.POST.get('reorder_level', 10))
+        cat_id = request.POST.get('category')
+
+        # Safety fallback for the Category rule
+        if cat_id:
+            try:
+                category_obj = Category.objects.get(id=cat_id)
+            except Category.DoesNotExist:
+                category_obj, _ = Category.objects.get_or_create(name="General Hardware")
+        else:
+            category_obj, _ = Category.objects.get_or_create(name="General Hardware")
+
+        if product:
+            # 👉 EDIT ROUTINE: Update fields on the existing database row
+            product.name = name
+            product.category = category_obj
+            product.cost_price = cost
+            product.selling_price = price
+            product.unit_of_measure = uom
+            product.current_stock = current_stock
+            product.reorder_level = reorder_lvl
+            product.save()
+            messages.success(request, f"Changes committed to '{name}' successfully.")
+        else:
+            # 👉 CREATE ROUTINE: Ingest a brand new row into the table
+            sku = f"NYO-{category_obj.name[:2].upper()}-{name[:3].upper()}-{int(timezone.now().timestamp())}"[:20]
+            Product.objects.create(
+                name=name,
+                category=category_obj,
+                cost_price=cost,
+                selling_price=price,
+                unit_of_measure=uom,
+                sku=sku,
+                current_stock=current_stock,
+                reorder_level=reorder_lvl
+            )
+            messages.success(request, f"New product '{name}' registered smoothly.")
+
+        return redirect('product_list')
+
+    # 3. GET FLOW: Rendering the page layout with existing data (if editing)
+    categories = Category.objects.all()
+    context = {
+        'product': product,      # Will be None when creating, full object when editing
+        'categories': categories,
+        'page_title': page_title
+    }
+    return render(request, 'product_form.html', context)
+
+
 def product_create(request):
     """
     Handles registering completely new items lines (e.g. adding 16mm iron bars for the first time)
     as well as restocking existing items lines under smart financial payment conditions.
     """
     if request.method == "POST":
-        name = request.POST.get('name')
+        name = request.POST.get('name', '').strip()
         cat_id = request.POST.get('category')
         cost = float(request.POST.get('cost_price', 0))
         price = float(request.POST.get('selling_price', 0))
-        uom = request.POST.get('unit_of_measure')
+        uom = request.POST.get('unit_of_measure', 'Pcs') or 'Pcs'
         reorder_lvl = int(request.POST.get('reorder_level', 10))
         initial_stock = int(request.POST.get('current_stock', 0))
         
-        # Smart Credit Parameter Flags
         is_credit = request.POST.get('is_credit') == 'on'
         supplier_id = request.POST.get('supplier_id')
 
@@ -73,7 +138,16 @@ def product_create(request):
             messages.error(request, "Credit Exception: You must select a Supplier profile when logging credit arrivals.")
             return redirect('product_create')
 
-        category = get_object_or_404(Category, id=cat_id)
+        # 🚀 THE SAFETY ENGINE FIX:
+        # Instead of get_object_or_404 crashing, check if the category exists.
+        # If it doesn't exist or none was selected, create/fetch a default one on the fly!
+        if cat_id:
+            try:
+                category = Category.objects.get(id=cat_id)
+            except Category.DoesNotExist:
+                category, _ = Category.objects.get_or_create(name="General Hardware")
+        else:
+            category, _ = Category.objects.get_or_create(name="General Hardware")
 
         # Execution using atomic transaction guards to preserve database state integrity
         with transaction.atomic():
@@ -116,12 +190,10 @@ def product_create(request):
                 supplier = get_object_or_404(Supplier, id=supplier_id)
                 batch_liability = initial_stock * cost
                 
-                # Increment running supplier ledger totals if column field tracks it
                 if hasattr(supplier, 'total_owed'):
                     supplier.total_owed += batch_liability
                     supplier.save()
 
-                # Save permanent Procurement record entry tracking this unliquidated batch
                 PurchaseOrder.objects.create(
                     supplier=supplier,
                     product=product,
@@ -132,8 +204,9 @@ def product_create(request):
                 )
                 action_text += f" UGX {batch_liability:,.0f} logged as credit debt to {supplier.name}."
 
+            # Safe Audit logging check
             AuditLog.objects.create(
-                user=request.user,
+                user=request.user if request.user.is_authenticated else None,
                 action=f"Registered product {product.name}"
             )    
 
@@ -142,13 +215,12 @@ def product_create(request):
 
     # GET Request processing
     categories = Category.objects.all()
-    suppliers = Supplier.objects.all() # Passed to fill the smart conditional dropdown menu
+    suppliers = Supplier.objects.all()
     
     context = {
         'categories': categories,
         'suppliers': suppliers
     }
-
     return render(request, 'product_form.html', context)
 
 

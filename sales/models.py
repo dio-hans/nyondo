@@ -248,3 +248,4 @@ class Receipt(models.Model):
     def __str__(self):
 
         return self.receipt_number
+    

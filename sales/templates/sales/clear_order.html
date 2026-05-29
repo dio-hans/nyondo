@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Clear Order T-{{ order.id }} | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        body * { visibility: hidden; }
+        #receipt-print-area, #receipt-print-area * { visibility: visible; }
+        #receipt-print-area { position: absolute; left: 0; top: 0; width: 100%; }
+        .no-print { display: none !important; }
+    }
+</style>
+
+<div class="max-w-4xl mx-auto p-6 space-y-6">
+    
+    <div class="no-print flex items-center justify-between border-b border-slate-100 pb-4">
+        <div>
+            <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider mb-1">📋 Bill Clearance Desk</h2>
+            <p class="text-xs text-slate-400 font-medium">Review pending items for Table/Order reference **T-{{ order.id }}**.</p>
+        </div>
+        <a href="{% url 'sales:order_queue_dashboard' %}" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors uppercase tracking-wider flex items-center gap-1">
+            ← Back to Queue
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        
+        <div id="receipt-print-area" class="md:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
+            
+            <div class="text-center border-b border-dashed border-slate-200 pb-4">
+                <h1 class="text-md font-black tracking-widest text-slate-900 uppercase">NYONDO HARDWARE</h1>
+                <p class="text-[10px] text-slate-500 font-medium">Quality Building Materials & Hardware Supplies</p>
+                <div class="text-[10px] text-slate-400 font-mono mt-2">
+                    Date: {{ order.order_date|date:"Y-m-d H:i" }} | Order: T-{{ order.id }}
+                </div>
+            </div>
+
+            <div class="text-xs space-y-1 border-b border-dashed border-slate-200 pb-3 text-slate-600 font-medium">
+                <p><span class="text-slate-400 uppercase tracking-wider text-[10px]">Customer:</span> {{ order.customer.name }}</p>
+                <p><span class="text-slate-400 uppercase tracking-wider text-[10px]">Served By:</span> {{ order.served_by.username|default:"System" }}</p>
+                <p><span class="text-slate-400 uppercase tracking-wider text-[10px]">Payment Mode:</span> {{ order.payment_method }}</p>
+            </div>
+
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="text-left text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-100 pb-2">
+                        <th class="py-2 font-black">Product Description</th>
+                        <th class="py-2 text-center font-black">Qty</th>
+                        <th class="py-2 text-right font-black">Price</th>
+                        <th class="py-2 text-right font-black">Total</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in order_items %}
+                        <tr class="text-slate-700 font-medium">
+                            <td class="py-3 font-semibold text-slate-900">{{ item.product.name }}</td>
+                            <td class="py-3 text-center font-mono text-slate-600">{{ item.quantity }}</td>
+                            <td class="py-3 text-right font-mono text-slate-600">{{ item.unit_price|floatformat:0 }}</td>
+                            <td class="py-3 text-right font-mono font-bold text-slate-900">UGX {{ item.subtotal|floatformat:0 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="border-t border-dashed border-slate-200 pt-4 space-y-2 text-xs">
+                <div class="flex justify-between font-medium text-slate-600">
+                    <span>Items Subtotal:</span>
+                    <span class="font-mono">UGX {{ order.subtotal|floatformat:0 }}</span>
+                </div>
+                <div class="flex justify-between font-medium text-slate-600">
+                    <span>Transport Fee Logistics:</span>
+                    <span class="font-mono">UGX {{ order.transport_fee|floatformat:0 }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-slate-900">
+                    <span class="font-black text-[10px] uppercase tracking-wider">Total Payable Due:</span>
+                    <span class="text-sm font-mono font-black text-blue-600">UGX {{ order.total_amount|floatformat:0 }}</span>
+                </div>
+            </div>
+
+            <div class="text-center pt-4 border-t border-dashed border-slate-200 text-[10px] font-medium text-slate-400">
+                <p>Thank you for shopping at Nyondo Hardware!</p>
+                <p class="font-mono text-[9px] mt-1">System Powered by Django Framework</p>
+            </div>
+        </div>
+
+        <div class="no-print space-y-4">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                <h3 class="text-xs font-black uppercase tracking-wider text-slate-700">Cashier Terminal Controls</h3>
+                
+                <button onclick="window.print();" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-black uppercase tracking-wider py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95">
+                    🖨️ Print Slip Receipt
+                </button>
+
+                <form method="POST" action="{% url 'sales:process_queue_clearance' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider py-3 px-4 rounded-lg transition-all shadow-sm active:scale-95">
+                        ✅ Clear & Post Transaction
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

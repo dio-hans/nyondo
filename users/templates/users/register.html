@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags static%}
+
+{% block header %}{% endblock %}
+
+    {% block title %}
+    Registration Page
+{% endblock %}
+
+{% block content %}
+    <div class="reg-form">
+        <form method="POST" novalidate>
+            {% csrf_token %}
+            {{form |crispy}}
+
+            <button type="submit">Register</button>
+        
+
+           </form>
+    
+    </div>
+{% endblock %}

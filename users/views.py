@@ -2,27 +2,53 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
+
+from .forms import UserRegistrationForm, UserLoginForm
+from .models import User
 
 # 1. MANAGEMENT (Authentication)
+def redirect_user_by_role(user):
+    """Sends the user straight to their specific operational layout"""
+    if user.role == User.Role.ADMIN:
+        return redirect('admin_dashboard')
+    elif user.role == User.Role.STORE_MANAGER:
+        return redirect('inventory_dashboard')
+    else:
+        return redirect('sales_dashboard')
 
-@login_required
+
 def user_login(request):
-    if request.method =='POST':
-        form = UserCreationForm(request.POST)
+    # Check 1: If they bounce here but are already logged in, send them away
+    if request.user.is_authenticated:
+        return redirect_user_by_role(request.user)
+
+    if request.method == 'POST':
+        form = UserLoginForm(request, data=request.POST)
+
         if form.is_valid():
-            form.save()
-            return redirect()
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
 
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                if not user.is_active:
+                    messages.error(request, "Your account has been suspended.")
+                    return redirect('login')
+
+                # Log them into the session backend
+                login(request, user)
+                messages.success(request, f"Welcome back, {user.username}")
+
+                # Check 2: Send them directly to their screen right now!
+                return redirect_user_by_role(user)
         else:
-            form=UserCreationForm()    
+            messages.error(request, "Invalid username or password.")
+    else:
+        form = UserLoginForm()
 
-    return render(request, 'users/login.html', {'form':form})
+    return render(request, 'users/login.html', {'form': form})
 
-
-@login_required
 def user_logout(request):
     logout(request)
     messages.info(request, "Logged out successfully.")
@@ -30,60 +56,30 @@ def user_logout(request):
 
 
 # 2. STAFF PROFILING (Role Actions)
-# Helper check to restrict access to Admins or Store Managers
 def can_manage_staff(user):
     return user.role in [User.Role.ADMIN, User.Role.STORE_MANAGER] or user.is_superuser
 
 
-@login_required
-@user_passes_test(can_manage_staff, login_url='business_dashboard', redirect_field_name=None)
+@user_passes_test(can_manage_staff, login_url='user_login', redirect_field_name=None)
 def user_list(request):
     """Displays all employees working in the system"""
     staff_members = User.objects.all().order_by('role')
     return render(request, 'users/user_list.html', {'system_users': staff_members})
 
 
-@login_required
-@user_passes_test(can_manage_staff, login_url='business_dashboard', redirect_field_name=None)
 def register_user(request):
-    """Allows Admin/Managers to create authenticated profiles for new employees"""
     if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
-        password = request.POST.get('password', '')
-        contact = request.POST.get('contact', '').strip()
-        emp_id = request.POST.get('employee_id', '').strip()
-        selected_role = request.POST.get('role')
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+                  
+            return redirect('login')
+    else:
+        form = UserRegistrationForm()
 
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists.")
-            return redirect('register_user')
+    return render(request, 'users/register.html', {'form': form})
 
-        try:
-            # Create core instance of custom user
-            new_staff = User.objects.create_user(
-                username=username,
-                password=password,
-                contact=contact,
-                employee_id=emp_id,
-                role=selected_role
-            )
-            
-            # Explicitly set administrative flags if given high clearance roles
-            if selected_role in [User.Role.ADMIN, User.Role.STORE_MANAGER]:
-                new_staff.is_staff = True
-                
-            new_staff.save()
-
-            messages.success(request, f"Staff record for {username} registered successfully.")
-            return redirect('user_list')
-        except Exception as e:
-            messages.error(request, f"Failed to register employee: {e}")
-
-    return render(request, 'users/register.html', {'roles': User.Role.choices})
-
-
-@login_required
-@user_passes_test(can_manage_staff, login_url='business_dashboard', redirect_field_name=None)
+@user_passes_test(can_manage_staff, login_url='user_login', redirect_field_name=None)
 def toggle_user_status(request, user_id):
     """Soft deactivation feature to handle account locks safely"""
     employee = get_object_or_404(User, id=user_id)
@@ -98,3 +94,5 @@ def toggle_user_status(request, user_id):
     status = "activated" if employee.is_active else "suspended"
     messages.success(request, f"Account access for {employee.username} has been {status}.")
     return redirect('user_list')
+
+

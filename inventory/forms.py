@@ -15,7 +15,8 @@ class ProductForm(forms.ModelForm):
             'cost_price',
             'selling_price',
             'current_stock',
-            'reorder_level'
+            'reorder_level',
+        
         ]
 
         widgets = {

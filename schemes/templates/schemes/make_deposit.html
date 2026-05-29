@@ -8,13 +8,29 @@
 
     <form method="POST" action="" class="space-y-4">
         {% csrf_token %}
+        
         <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Select Enrolled Member</label>
-            <select name="member" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                {% for member in members %}
-                <option value="{{ member.id }}">{{ member.full_name }} (NIN: {{ member.nin_number }})</option>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Select Enrolled Member (Type to Search / Dropdown)
+            </label>
+            
+            <input 
+                list="enrolled-members-list" 
+                name="customer_name" 
+                id="customer_name"
+                required 
+                placeholder="Type customer name to search..." 
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                value="{% if scheme %}{{ scheme.customer.name }}{% endif %}"
+            >
+            
+            <datalist id="enrolled-members-list">
+                {% for item in active_schemes %}
+                    <option value="{{ item.customer.name }}"> (NIN: {{ item.nin }})</option>
+                {% empty %}
+                    <option value="No active savings members found">
                 {% endfor %}
-            </select>
+            </datalist>
         </div>
 
         <div>
@@ -24,10 +40,12 @@
 
         <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Target Material Allocation</label>
-            <select name="target_material" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                <option value="CEMENT">Cement (Cem II / Cem III)</option>
-                <option value="IRON_SHEETS">Iron Sheets (All Gauges)</option>
-                <option value="IRON_BARS">Iron Bars (10mm, 12mm, 16mm)</option>
+            <select name="material_allocation" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                {% for product in hardware_materials %}
+                    <option value="{{ product.id }}">{{ product.name }}</option>
+                {% empty %}
+                    <option value="">No hardware products configured in inventory</option>
+                {% endfor %}
             </select>
             <span class="text-[9px] text-amber-600 font-bold block mt-1">⚠️ Per company rules, this program is restricted to cement, iron sheets, and bars only.</span>
         </div>
