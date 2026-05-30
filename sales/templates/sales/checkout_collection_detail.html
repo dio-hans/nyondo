@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Checkout Verification | Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        /* Hide navbar, back buttons, and action footer matrices completely during hardware print triggers */
+        body *, .no-print { display: none !important; }
+        .print-receipt-sheet, .print-receipt-sheet * { display: block !important; }
+        .print-receipt-sheet { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; border: none !important; box-shadow: none !important; padding: 0 !important; }
+    }
+</style>
+
+<div class="max-w-3xl mx-auto p-6 space-y-6">
+
+    <div class="flex items-center justify-between no-print border-b border-slate-100 pb-4">
+        <a href="{% url 'order_queue' %}" class="text-xs font-bold text-slate-500 hover:text-slate-800">
+            ← Return to Hub Panel
+        </a>
+        <div class="flex items-center gap-2">
+
+            <a href="{% url 'review_checkout' %}">
+                <button onclick="window.print();" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-black uppercase tracking-wider px-4 py-2 rounded-xl transition-all shadow-sm">
+                 Print Receipt
+            </button>
+
+            </a>
+            
+            
+            <form action="{% url 'process_queue_clearance' order.id %}" method="POST" onsubmit="return confirm('Confirm cash collection and clear this ticket?');">
+                {% csrf_token %}
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wider px-4 py-2 rounded-xl transition-all shadow-sm">
+                     Clear From Queue
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="print-receipt-sheet bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+        
+        <div class="text-center space-y-1 border-b border-dashed border-slate-200 pb-4">
+            <h2 class="text-lg font-black text-slate-900 uppercase tracking-widest">NYONDO HARDWARE</h2>
+            <p class="text-[11px] text-slate-400 font-medium">Kampala, Uganda • Depot Supply Logistics</p>
+            <div class="text-[10px] font-mono text-slate-500 mt-2">
+                <span>TICKET ID: #{{ order.id }}</span> &nbsp;|&nbsp; 
+                <span>DATE: {{ order.order_date|date:"Y-m-d H:i" }}</span>
+            </div>
+        </div>
+
+        <div>
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">Itemized Materials Check</span>
+            <table class="w-full text-xs text-left">
+                <thead>
+                    <tr class="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                        <th class="pb-2">Product Description</th>
+                        <th class="pb-2 text-center">Qty</th>
+                        <th class="pb-2 text-right">Unit Cost</th>
+                        <th class="pb-2 text-right">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50 font-medium text-slate-700">
+                    {% for item in order_items %}
+                    <tr>
+                        <td class="py-3 font-bold text-slate-900">{{ item.product.name }}</td>
+                        <td class="py-3 text-center font-mono text-slate-500">{{ item.quantity }}</td>
+                        <td class="py-3 text-right font-mono text-slate-400">UGX {{ item.unit_price|floatformat:0 }}</td>
+                        <td class="py-3 text-right font-mono text-slate-900">UGX {{ item.subtotal|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="border-t border-dashed border-slate-200 pt-4 flex flex-col items-end space-y-1.5 text-xs font-medium">
+            <div class="w-64 flex justify-between text-slate-500">
+                <span>Transport Logistics Allocations:</span>
+                <span class="font-mono">UGX {{ order.transport_fee|floatformat:0 }}</span>
+            </div>
+            <div class="w-64 flex justify-between text-slate-900 font-black text-sm border-t border-slate-100 pt-2">
+                <span>TOTAL COST AMOUNT:</span>
+                <span class="font-mono text-blue-600">UGX {{ order.total_amount|floatformat:0 }}</span>
+            </div>
+        </div>
+
+        <div class="text-center text-[10px] text-slate-400 font-medium border-t border-slate-100 pt-4">
+            <p>Thank you for doing business with Nyondo Hardware!</p>
+            <p class="font-mono text-[9px] mt-0.5">Logged Session Handled by: {{ request.user.username }}</p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

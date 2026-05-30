@@ -21,19 +21,13 @@ from inventory.models import Product, StockMovement  # Added StockMovement for h
 from schemes.models import SchemeDeposit  # Added for scheme collection reporting
 
 
-# =========================================
 # BUSINESS DASHBOARD
-# =========================================
 
-@login_required
-@admin_required
 def business_dashboard(request):
 
     today = timezone.now().date()
 
-    # =====================================
     # DATE FILTER LOGIC
-    # =====================================
 
     preset = request.GET.get('preset')
     start_date = request.GET.get('start_date')
@@ -67,9 +61,7 @@ def business_dashboard(request):
         sales = sales.filter(order_date__date__range=[start_date, end_date])
         scheme_deposits = scheme_deposits.filter(deposited_at__date__range=[start_date, end_date])
 
-    # =====================================
     # SALES REPORTS
-    # =====================================
 
     total_revenue = sales.aggregate(total=Sum('total_amount'))['total'] or 0
 
@@ -78,9 +70,7 @@ def business_dashboard(request):
 
     total_orders = sales.count()
 
-    # =====================================
     # SALES ITEMS
-    # =====================================
 
     sale_items = SalesOrderItem.objects.filter(
         sales_order__in=sales
@@ -88,9 +78,7 @@ def business_dashboard(request):
 
     total_items_sold = sale_items.aggregate(total=Sum('quantity'))['total'] or 0
 
-    # =====================================
     # PERFORMANCE METRICS (Top & Least Selling)
-    # =====================================
 
     # Top Selling Products
     top_products = sale_items.values(
@@ -125,9 +113,7 @@ def business_dashboard(request):
         total=Sum(profit_expression)
     )['total'] or 0
 
-    # =====================================
-    # REPORT ADDED: CASHIER PERFORMANCE
-    # =====================================
+     # REPORT ADDED: CASHIER PERFORMANCE
 
     cashier_performance = sales.values(
         'served_by__username'
@@ -136,26 +122,20 @@ def business_dashboard(request):
         tickets_closed=Count('id')
     ).order_by('-total_sales_generated')
 
-    # =====================================
     # REPORT ADDED: BEST CUSTOMERS
-    # =====================================
 
     best_customers = sales.values('customer__name').annotate(
         total_spent=Sum('total_amount'),
         order_count=Count('id')
     ).order_by('-total_spent')[:5]
 
-    # =====================================
-    # REPORT ADDED: SCHEME COLLECTIONS
-    # =====================================
+   # REPORT ADDED: SCHEME COLLECTIONS
 
     scheme_collections_total = scheme_deposits.aggregate(
         total=Sum('amount')
     )['total'] or 0
 
-    # =====================================
-    # REPORT ADDED: UNPAID SUPPLIERS
-    # =====================================
+   # REPORT ADDED: UNPAID SUPPLIERS
 
     unpaid_supplier_orders = PurchaseOrder.objects.filter(
        balance__gt=0
@@ -165,9 +145,7 @@ def business_dashboard(request):
         total=Sum('balance')
     )['total'] or 0
 
-    # =====================================
-    # INVENTORY VALUE
-    # =====================================
+   # INVENTORY VALUE
 
     inventory = Product.objects.all()
 
@@ -180,17 +158,13 @@ def business_dashboard(request):
         current_stock__lte=F('reorder_level')
     )
 
-    # =====================================
     # REPORT ADDED: STOCK MOVEMENT HISTORY
-    # =====================================
 
     recent_stock_movements = StockMovement.objects.all().select_related(
         'product'
     ).order_by('-moved_at')[:10]  # Pulls last 10 audit details
 
-    # =====================================
     # CONTEXT
-    # =====================================
 
     context = {
         'sales': sales,
@@ -235,10 +209,7 @@ def financial_statement_view(request):
         status='COMPLETED'
     )
 
-    # =====================================
     # TOTAL SALES
-    # =====================================
-
     total_sales = completed_sales.aggregate(
         total=Sum('total_amount')
     )['total'] or 0
@@ -293,4 +264,9 @@ def financial_statement_view(request):
         'reports/financial_statement.html',
         context
     )
+
+# REPORTS DIRECTORY INDEX
+def reports_index_view(request):
+    """ Renders the catalog listing page for all standalone sub-reports """
+    return render(request, 'reports/reports_index.html')
 

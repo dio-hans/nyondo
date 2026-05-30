@@ -153,3 +153,51 @@ def order_queue_dashboard(request):
         'pending_orders': pending_orders,
     }
     return render(request, 'sales/order_queue.html', context)
+
+
+def process_queue_clearance(request, order_id):
+    """
+    Processes and clears a pending queue ticket order, transitioning 
+    its status to COMPLETED so it updates real-time administrative reports.
+    """
+    # 1. Fetch the specific order or return a 404 page if not found
+    order = get_object_or_404(SalesOrder, id=order_id)
+    
+    # 2. Safety Check: Only process if it isn't already completed
+    if order.status == 'COMPLETED':
+        messages.warning(request, f"Order #{order.id} has already been cleared and processed.")
+        return redirect('sales:queue_list')  # Adjust to your actual queue list redirect name
+        
+    try:
+        # 3. Transition the status and log who cleared the ticket
+        order.status = 'COMPLETED'
+        order.served_by = request.user  # Records the active cashier for performance tracking
+        order.updated_at = timezone.now() # Updates timestamp log
+        order.save()
+        
+        # 4. Push a success notification to the UI toast messages
+        messages.success(request, f"Success! Order #{order.id} has been cleared and posted to revenue metrics.")
+        
+    except Exception as e:
+        messages.error(request, f"An error occurred while clearing the queue: {str(e)}")
+        
+    # 5. Redirect back to the pending queue panel deck layout
+    return redirect('sales:queue_list')  # Change this to match the URL name of your active checkout queue page
+
+
+def checkout_collection_detail(request, order_id):
+    """
+    Renders the itemized verification sheet for a pending orders.
+    Provides receipt printing layouts and houses the queue clearance execution trigger.
+    """
+    # Fetch the order ensuring it is still PENDING or processing
+    order = get_object_or_404(SalesOrder, id=order_id)
+    
+    # Retrieve all items linked to this hardware order sheet
+    order_items = SalesOrderItem.objects.filter(sales_order=order)
+    
+    context = {
+        'order': order,
+        'order_items': order_items,
+    }
+    return render(request, 'sales/checkout_collection_detail.html', context)

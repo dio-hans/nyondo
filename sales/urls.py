@@ -8,7 +8,8 @@ urlpatterns = [
     # This points sales/record/ to your sale checkout form
     path('record/', views.make_sale, name='record_sale'),
     path('review_checkout', views.review_checkout, name='review_checkout'),
-    path('order_queue', views.order_queue_dashboard, name='order_queue'),
     # In sales/urls.py
+    path('order_queue', views.order_queue_dashboard, name='order_queue'),
     path('queue/clear/<int:order_id>/', views.process_queue_clearance, name='process_queue_clearance'),
+    path('queue/checkout/<int:order_id>/', views.checkout_collection_detail, name='checkout_collection_detail'),
 ]

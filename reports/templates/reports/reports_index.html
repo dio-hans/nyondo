@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Management Reports | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto p-6 space-y-6">
+
+    <div class="border-b border-slate-100 pb-4">
+        <div class="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-1">Nyondo Hardware Analytics</div>
+        <h2 class="text-xl font-black text-slate-900 tracking-tight">Business Management Reports Matrix</h2>
+        <p class="text-xs text-slate-400 font-medium mt-0.5">Select a ledger line below to inspect transaction logs, operational speed performance matrices, or margin splits.</p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100 shadow-sm overflow-hidden">
+        
+        <a href="{% url 'reports:financial_statement' %}" class="p-5 block hover:bg-slate-50 group transition-all">
+            <h4 class="text-sm font-black text-blue-600 group-hover:text-blue-800 transition-colors mb-1">Financial Performance Statement</h4>
+            <p class="text-xs text-slate-500 font-medium leading-relaxed">Review overall business health. Computes total completed revenues, tracks explicit Cost of Goods Sold (COGS), and delivers net period estimated profits.</p>
+        </a>
+
+        <a href="{% url 'reports:cashier_performance' %}" class="p-5 block hover:bg-slate-50 group transition-all">
+            <h4 class="text-sm font-black text-blue-600 group-hover:text-blue-800 transition-colors mb-1">Cashier Operational Speed Matrix</h4>
+            <p class="text-xs text-slate-500 font-medium leading-relaxed">Audit front-desk transaction logs. Tracks checkout ticket clear volumes and computes individual cash generation rankings for performance bonuses.</p>
+        </a>
+
+        <a href="{% url 'reports:highest_profit' %}" class="p-5 block hover:bg-slate-50 group transition-all">
+            <h4 class="text-sm font-black text-blue-600 group-hover:text-blue-800 transition-colors mb-1">Highest Profit Margins Summary</h4>
+            <p class="text-xs text-slate-500 font-medium leading-relaxed">Isolate your highest margin items. Runs item calculations comparing sales unit prices directly against warehouse cost baselines.</p>
+        </a>
+
+        <a href="{% url 'reports:least_selling' %}" class="p-5 block hover:bg-slate-50 group transition-all">
+            <h4 class="text-sm font-black text-blue-600 group-hover:text-blue-800 transition-colors mb-1">Least Selling (Dead Stock) Audit</h4>
+            <p class="text-xs text-slate-500 font-medium leading-relaxed">Identify slow-moving stock lines. Lists low-turnover hardware items to help avoid frozen capital and formulate clean markdown strategies.</p>
+        </a>
+
+        <a href="{% url 'reports:stock_history' %}" class="p-5 block hover:bg-slate-50 group transition-all">
+            <h4 class="text-sm font-black text-blue-600 group-hover:text-blue-800 transition-colors mb-1">Warehouse Stock Movement History</h4>
+            <p class="text-xs text-slate-500 font-medium leading-relaxed">Comprehensive inventory trail tracker. Audit incoming supplier shipments (IN) against active floor check cuts (OUT) to prevent stock shrink.</p>
+        </a>
+
+        <a href="{% url 'reports:transport_revenue' %}" class="p-5 block hover:bg-slate-50 group transition-all">
+            <h4 class="text-sm font-black text-blue-600 group-hover:text-blue-800 transition-colors mb-1">Transport & Logistic Revenue Metrics</h4>
+            <p class="text-xs text-slate-500 font-medium leading-relaxed">Track logistical shipping profiles. Isolates independent customer distribution checkout fees collected for fleet maintenance auditing.</p>
+        </a>
+
+    </div>
+
+    <div class="pt-2 no-print">
+        <a href="{% url 'reports:admin_dashboard' %}" class="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1">
+            ← Return to Main Management Console
+        </a>
+    </div>
+
+</div>
+{% endblock %}
