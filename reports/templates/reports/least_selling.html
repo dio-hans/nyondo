@@ -1,19 +1,36 @@
 {% extends 'base.html' %}
+{% load humanize %}
+
 {% block title %}Least Selling Products | Nyondo Hardware{% endblock %}
 
 {% block content %}
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<!-- Control Panel Header Block -->
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
     <div>
-        <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider"><i class="fa-solid fa-arrow-down-short-wide text-rose-600 mr-1"></i> Sluggish/Least Selling Tracking</h2>
-        <p class="text-xs text-slate-400 font-medium">Flags materials with slow inventory turnover metrics.</p>
+        <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">
+            <i class="fa-solid fa-arrow-down-short-wide text-rose-600 mr-1"></i> Sluggish / Least Selling Tracking Matrix
+        </h2>
+        <p class="text-xs text-slate-400 font-medium mt-0.5">Flags materials with slow inventory turnover metrics inside the specified range.</p>
     </div>
-    <form method="GET" class="flex gap-2 text-xs font-bold">
-        <input type="date" name="start" required class="border border-slate-200 px-2 py-1 rounded-md">
-        <input type="date" name="end" required class="border border-slate-200 px-2 py-1 rounded-md">
-        <button type="submit" class="bg-slate-900 text-white px-3 py-1 rounded-md text-[11px] uppercase tracking-wider">Run</button>
-    </form>
+    
+    <!-- Unified Date Filter Engine -->
+    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+        <div class="flex items-center gap-1.5 text-[11px] font-bold">
+            <a href="?preset=today" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'today' %}bg-rose-600 text-white hover:bg-rose-700{% endif %}">Today</a>
+            <a href="?preset=yesterday" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'yesterday' %}bg-rose-600 text-white hover:bg-rose-700{% endif %}">Yesterday</a>
+            <a href="?preset=this_month" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'this_month' or not request.GET.preset and not request.GET.start_date %}bg-rose-600 text-white hover:bg-rose-700{% endif %}">This Month</a>
+        </div>
+        
+        <form method="GET" class="flex items-center gap-2 text-[11px] font-bold sm:ml-auto lg:ml-0">
+            <input type="date" name="start_date" value="{{ start_date|default:'' }}" required class="border border-slate-200 px-2 py-1 rounded-md text-slate-700 focus:outline-none focus:border-rose-500">
+            <span class="text-slate-400">to</span>
+            <input type="date" name="end_date" value="{{ end_date|default:'' }}" required class="border border-slate-200 px-2 py-1 rounded-md text-slate-700 focus:outline-none focus:border-rose-500">
+            <button type="submit" class="bg-slate-900 text-white px-3 py-1 rounded-md uppercase tracking-wider hover:bg-slate-800 transition-colors">Run</button>
+        </form>
+    </div>
 </div>
 
+<!-- Main Slow Inventory Turnover Table Workspace -->
 <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
     <table class="w-full text-left border-collapse">
         <thead>
@@ -24,16 +41,34 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-            {% for item in slow_data %}
-            <tr class="hover:bg-rose-50/20">
-                <td class="p-4 pl-6 font-black text-slate-900 uppercase">{{ item.name }}</td>
-                <td class="p-4 text-center font-bold text-slate-600">{{ item.current_stock }} units</td>
-                <td class="p-4 text-center font-black text-rose-700">{{ item.total_sold|default:"0" }} units sold</td>
+            {% for item in least_selling_products %}
+            <tr class="hover:bg-rose-50/20 transition-colors">
+                <td class="p-4 pl-6 font-black text-slate-900 uppercase">
+                    {{ item.name }}
+                </td>
+                <td class="p-4 text-center font-bold text-slate-600">
+                    {{ item.current_stock|intcomma }} units
+                </td>
+                <td class="p-4 text-center font-black text-rose-700 bg-rose-50/30">
+                    {{ item.total_sold|default:"0"|intcomma }} units sold
+                </td>
             </tr>
             {% empty %}
-            <tr><td colspan="3" class="text-center py-8 text-slate-400 font-bold uppercase">All hardware items are performing normally.</td></tr>
+            <tr>
+                <td colspan="3" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-slate-50/30">
+                    <i class="fa-solid fa-circle-check text-emerald-500 text-lg block mb-2"></i>
+                    All hardware inventory lines are performing within standard velocity turnover margins.
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
+</div>
+
+<!-- Navigation Backlink Console -->
+<div class="mt-6 no-print">
+    <a href="{% url 'reports_index' %}" class="text-xs font-black uppercase text-slate-400 hover:text-slate-700 tracking-wider flex items-center gap-1 transition-colors">
+        <i class="fa-solid fa-arrow-left"></i> Back to Reports Matrix
+    </a>
 </div>
 {% endblock %}

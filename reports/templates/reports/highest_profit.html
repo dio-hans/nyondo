@@ -1,17 +1,31 @@
 {% extends 'base.html' %}
+{% load humanize %}
+
 {% block title %}Profitability Trends | Nyondo Hardware{% endblock %}
 
 {% block content %}
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
     <div>
-        <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider"><i class="fa-solid fa-money-bill-trend-up text-emerald-600 mr-1"></i> Profitability Performance & Trends</h2>
-        <p class="text-xs text-slate-400 font-medium">Calculates metrics comparing actual material cost against selling performance values.</p>
+        <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">
+            <i class="fa-solid fa-money-bill-trend-up text-emerald-600 mr-1"></i> Profitability Performance & Trends
+        </h2>
+        <p class="text-xs text-slate-400 font-medium mt-0.5">Calculates metrics comparing actual material cost against selling performance values.</p>
     </div>
-    <form method="GET" class="flex gap-2 text-xs font-bold">
-        <input type="date" name="start" required class="border border-slate-200 px-2 py-1 rounded-md">
-        <input type="date" name="end" required class="border border-slate-200 px-2 py-1 rounded-md">
-        <button type="submit" class="bg-slate-900 text-white px-3 py-1 rounded-md text-[11px] uppercase tracking-wider">Run</button>
-    </form>
+    
+    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+        <div class="flex items-center gap-1.5 text-[11px] font-bold">
+            <a href="?preset=today" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'today' %}bg-emerald-600 text-white hover:bg-emerald-700{% endif %}">Today</a>
+            <a href="?preset=yesterday" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'yesterday' %}bg-emerald-600 text-white hover:bg-emerald-700{% endif %}">Yesterday</a>
+            <a href="?preset=this_month" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'this_month' or not request.GET.preset and not request.GET.start_date %}bg-emerald-600 text-white hover:bg-emerald-700{% endif %}">This Month</a>
+        </div>
+        
+        <form method="GET" class="flex items-center gap-2 text-[11px] font-bold sm:ml-auto lg:ml-0">
+            <input type="date" name="start_date" value="{{ start_date|default:'' }}" required class="border border-slate-200 px-2 py-1 rounded-md text-slate-700 focus:outline-none focus:border-emerald-500">
+            <span class="text-slate-400">to</span>
+            <input type="date" name="end_date" value="{{ end_date|default:'' }}" required class="border border-slate-200 px-2 py-1 rounded-md text-slate-700 focus:outline-none focus:border-emerald-500">
+            <button type="submit" class="bg-slate-900 text-white px-3 py-1 rounded-md uppercase tracking-wider hover:bg-slate-800 transition-colors">Run</button>
+        </form>
+    </div>
 </div>
 
 <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
@@ -19,23 +33,42 @@
         <thead>
             <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase text-slate-500">
                 <th class="p-4 pl-6">Material Component</th>
-                <th class="p-4 text-center">Units Sold</th>
+                <th class="p-4 text-center">Units Dispatched</th>
                 <th class="p-4 text-right">Unit Profit Margin</th>
                 <th class="p-4 text-right pr-6">Total Accrued Margin Contribution</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-            {% for item in profit_data %}
-            <tr>
-                <td class="p-4 pl-6 font-black text-slate-900 uppercase">{{ item.name }}</td>
-                <td class="p-4 text-center">{{ item.total_qty }}</td>
-                <td class="p-4 text-right text-slate-400">UGX {{ item.unit_margin }}</td>
-                <td class="p-4 text-right pr-6 font-black text-emerald-700">UGX {{ item.total_profit }}</td>
+            {% for item in profitable_products %}
+            <tr class="hover:bg-slate-50/50 transition-colors">
+                <td class="p-4 pl-6 font-black text-slate-900 uppercase">
+                    {{ item.name }}
+                </td>
+                <td class="p-4 text-center font-bold text-slate-600">
+                    {{ item.total_qty|intcomma }} units
+                </td>
+                <td class="p-4 text-right font-semibold text-slate-400">
+                    UGX {{ item.unit_margin|intcomma }}
+                </td>
+                <td class="p-4 text-right pr-6 font-black text-emerald-700 bg-emerald-50/20">
+                    UGX {{ item.total_profit|intcomma }}
+                </td>
             </tr>
             {% empty %}
-            <tr><td colspan="4" class="text-center py-8 text-slate-400 font-bold uppercase">No records found within date ranges.</td></tr>
+            <tr>
+                <td colspan="4" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-slate-50/30">
+                    <i class="fa-solid fa-folder-open text-slate-300 text-lg block mb-2"></i>
+                    No sales invoice distributions recorded within these date parameters.
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
+</div>
+
+<div class="mt-6 no-print">
+    <a href="{% url 'reports_index' %}" class="text-xs font-black uppercase text-slate-400 hover:text-slate-700 tracking-wider flex items-center gap-1 transition-colors">
+        <i class="fa-solid fa-arrow-left"></i> Back to Reports Matrix
+    </a>
 </div>
 {% endblock %}

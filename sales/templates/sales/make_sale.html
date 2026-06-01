@@ -1,99 +1,125 @@
 {% extends 'base.html' %}
+{% load humanize %}
+
 {% block title %}POS Terminal | Nyondo Hardware{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-120px)]">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-120px)] my-4 px-4">
 
+    <!-- Left Side: Product Selector Matrix Panel -->
     <div class="lg:col-span-2 flex flex-col h-full space-y-4">
-        <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-center justify-between shadow-2xs">
+        
+        <!-- Search Filtering Registry Row -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between shadow-sm">
             <div class="w-full sm:w-1/2">
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Active Customer Link</label>
-                <select id="pos-customer-select" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:outline-none">
+                <label for="pos-customer-select" class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Active Customer Link</label>
+                <select id="pos-customer-select" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all">
                     {% for customer in customers %}
                         <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.get_customer_type_display }})</option>
                     {% endfor %}
                 </select>
             </div>
-            <input type="text" id="product-search" onkeyup="filterSearch()" placeholder="Start typing to search stock..." class="w-full sm:w-1/2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none placeholder-slate-400">
+            <div class="w-full sm:w-1/2">
+                <label for="product-search" class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Stock Registry Search</label>
+                <input type="text" id="product-search" onkeyup="filterSearch()" placeholder="Start typing to search stock items..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all placeholder-slate-400">
+            </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 pr-2" id="hardware-grid">
+        <!-- Dynamic Product Inventory Spool Grid -->
+        <div class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 pr-2 pb-4" id="hardware-grid">
             {% for product in products %}
-                <div class="product-card bg-slate-800 hover:bg-slate-700 text-white rounded-xl p-4 flex flex-col justify-between cursor-pointer transition-all border border-slate-700/50 relative overflow-hidden active:scale-98" 
+                <div class="product-card bg-slate-900 hover:bg-slate-800 text-white rounded-xl p-4 flex flex-col justify-between cursor-pointer transition-all border border-slate-800 relative overflow-hidden active:scale-95 group shadow-sm" 
                      data-id="{{ product.id }}" 
                      data-name="{{ product.name }}" 
                      data-price="{{ product.selling_price }}" 
                      data-stock="{{ product.current_stock }}"
                      onclick="openQtyModal(this)">
-                    <div class="absolute top-1 right-2 text-[9px] text-slate-400 font-bold font-mono">Stock: {{ product.current_stock }}</div>
-                    <h4 class="text-xs font-black uppercase tracking-tight mt-2 text-slate-100 leading-snug product-title-name">{{ product.name }}</h4>
-                    <div class="text-right mt-4 border-t border-slate-700 pt-2">
-                        <span class="text-xs font-mono font-black text-emerald-400">UGX {{ product.selling_price|floatformat:0 }}</span>
+                    
+                    <div class="absolute top-2 right-2 text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-black font-mono border border-slate-700/40">
+                        STK: {{ product.current_stock }}
+                    </div>
+                    
+                    <h4 class="text-xs font-black uppercase tracking-tight mt-4 text-slate-100 leading-snug product-title-name group-hover:text-blue-400 transition-colors">
+                        {{ product.name }}
+                    </h4>
+                    
+                    <div class="text-right mt-4 border-t border-slate-800 pt-2">
+                        <span class="text-xs font-mono font-black text-emerald-400">UGX {{ product.selling_price|default:"0"|intcomma }}</span>
                     </div>
                 </div>
             {% empty %}
-                <div class="col-span-full bg-slate-50 border border-dashed border-slate-200 rounded-xl p-12 text-center text-xs text-slate-400 font-medium">
+                <div class="col-span-full bg-white border border-dashed border-slate-200 rounded-xl p-12 text-center text-xs text-slate-400 font-bold uppercase tracking-wider">
+                 
                     No hardware materials matching minimum stock rules available.
                 </div>
             {% endfor %}
         </div>
     </div>
 
-    <div class="bg-white border border-slate-200 rounded-xl shadow-2xs p-4 flex flex-col h-full justify-between">
-        <div>
-            <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
-                <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest" id="running-terminal-title">Active Invoice</h3>
-                <span class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-black font-mono" id="cart-counter">0 Items</span>
+    <!-- Right Side: Running Statement Cart Sidebar Checkout Box -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 flex flex-col h-full justify-between">
+        <div class="space-y-4">
+            <div class="border-b border-slate-200 pb-3 flex justify-between items-center">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  Active Invoice
+                </h3>
+                <span class="bg-blue-50 text-blue-700 text-[10px] px-2.5 py-1 rounded-md font-black font-mono border border-blue-100" id="cart-counter">0 Items</span>
             </div>
             
+            <!-- Items Scroll Hook Hookpoint -->
             <div id="cart-items-hook" class="divide-y divide-slate-100 overflow-y-auto max-h-[calc(100vh-340px)] pr-1">
-                <p id="empty-cart-notice" class="text-center text-slate-400 text-xs font-medium py-12 italic">Cart empty. Tap products to add them.</p>
+                <div id="empty-cart-notice" class="text-center text-slate-400 text-xs font-bold py-16 uppercase tracking-wide space-y-2">
+                    
+                    <p class="italic font-medium text-[11px] text-slate-400 normal-case">Cart empty. Tap available materials cards to load values.</p>
+                </div>
             </div>
         </div>
 
-        <div class="border-t border-slate-100 pt-4 space-y-3">
+        <!-- Order Subtotal Pricing & Final Validation Actions Footer -->
+        <div class="border-t border-slate-200 pt-4 space-y-3">
             <div class="flex justify-between items-center font-black text-slate-900 text-xs uppercase tracking-wider px-1">
-                <span>Estimated Subtotal:</span>
-                <span id="cart-subtotal-display" class="font-mono text-sm text-slate-950 bg-slate-100 px-2 py-1 rounded">UGX 0</span>
+                <span class="text-slate-400">Estimated Subtotal:</span>
+                <span id="cart-subtotal-display" class="font-mono text-sm text-blue-600 bg-slate-50 border border-slate-200/60 px-3 py-1.5 rounded-lg">UGX 0</span>
             </div>
             
             <form id="checkout-passthrough-form" method="POST" action="{% url 'review_checkout' %}">
                 {% csrf_token %}
                 <input type="hidden" name="customer" id="passthrough-customer-id">
                 <input type="hidden" name="cart_json" id="passthrough-cart-json">
-                <button type="button" onclick="submitPOSCart()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2">
-                    🛒 Add To Cart & Continue
+                <button type="button" onclick="submitPOSCart()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                    Add To Cart & Continue
                 </button>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Modal Dialog Unit Adjustment Pop Up -->
 <div id="qty-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl border border-slate-200 max-w-sm w-full p-6 space-y-4 shadow-xl">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-sm w-full p-6 space-y-4 shadow-xl animate-in fade-in zoom-in-95 duration-150">
         <div>
             <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Adjust Item Units</span>
             <h3 id="modal-product-name" class="text-sm font-black text-slate-900 uppercase tracking-tight mt-0.5">Product Title</h3>
         </div>
         
-        <div class="space-y-1">
-            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Purchase Quantity</label>
-            <div class="flex border border-slate-200 rounded-lg overflow-hidden font-mono font-bold">
-                <button type="button" onclick="stepQty(-1)" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 border-r border-slate-200 text-slate-600 text-sm">━</button>
-                <input type="number" id="modal-qty-input" value="1" min="1" class="w-full text-center text-xs font-bold text-slate-800 bg-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                <button type="button" onclick="stepQty(1)" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 border-l border-slate-200 text-slate-600 text-sm">╋</button>
+        <div class="space-y-1.5">
+            <label for="modal-qty-input" class="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Purchase Quantity</label>
+            <div class="flex border border-slate-200 rounded-lg overflow-hidden font-mono font-bold shadow-xs">
+                <button type="button" onclick="stepQty(-1)" class="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 border-r border-slate-200 text-slate-600 text-sm cursor-pointer transition-colors">━</button>
+                <input type="number" id="modal-qty-input" value="1" min="1" class="w-full text-center text-xs font-black text-slate-800 bg-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                <button type="button" onclick="stepQty(1)" class="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 border-l border-slate-200 text-slate-600 text-sm cursor-pointer transition-colors">╋</button>
             </div>
         </div>
 
         <div class="flex gap-2 pt-2">
-            <button type="button" onclick="closeQtyModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition-all">Cancel</button>
-            <button type="button" onclick="commitCartLine()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-black py-2 rounded-lg text-xs uppercase tracking-wider transition-all shadow-sm">Add to Cart</button>
+            <button type="button" onclick="closeQtyModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer">Cancel</button>
+            <button type="button" onclick="commitCartLine()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer">Confirm</button>
         </div>
     </div>
 </div>
 
 <script>
-    let currentCart = {}; // Format: { product_id: { name, price, qty, stock } }
+    let currentCart = {}; 
     let selectedActiveProduct = null;
 
     function filterSearch() {
@@ -114,12 +140,11 @@
         };
         
         document.getElementById('modal-product-name').innerText = selectedActiveProduct.name;
-        // Check if item already exists in the cart to maintain active quantity state
         document.getElementById('modal-qty-input').value = currentCart[selectedActiveProduct.id] ? currentCart[selectedActiveProduct.id].qty : 1;
         document.getElementById('qty-modal').style.display = 'flex';
     }
 
-     Kakao: function closeQtyModal() {
+    function closeQtyModal() {
         document.getElementById('qty-modal').style.display = 'none';
     }
 
@@ -175,15 +200,15 @@
             itemsCount += item.qty;
             
             let div = document.createElement('div');
-            div.className = "flex items-center justify-between py-2.5 text-xs text-slate-700 font-medium";
+            div.className = "flex items-center justify-between py-3 text-xs text-slate-700 font-semibold border-b border-slate-50";
             div.innerHTML = `
                 <div class="space-y-0.5 w-2/3 pr-2">
-                    <h5 class="font-bold text-slate-900 uppercase tracking-tight truncate">${item.name}</h5>
+                    <h5 class="font-black text-slate-900 uppercase tracking-tight truncate">${item.name}</h5>
                     <p class="text-[10px] text-slate-400 font-mono font-bold">${item.qty} pcs × UGX ${item.price.toLocaleString()}</p>
                 </div>
-                <div class="flex items-center gap-3 font-mono font-bold text-slate-900">
+                <div class="flex items-center gap-2.5 font-mono font-black text-slate-900 whitespace-nowrap">
                     <span>UGX ${lineCost.toLocaleString()}</span>
-                    <button type="button" onclick="dropCartLine('${id}')" class="text-rose-500 hover:text-rose-700 text-sm">✕</button>
+                    <button type="button" onclick="dropCartLine('${id}')" class="text-rose-500 hover:text-rose-700 text-xs px-1.5 py-1 rounded hover:bg-rose-50 transition-colors cursor-pointer">✕</button>
                 </div>
             `;
             hook.appendChild(div);
@@ -206,7 +231,6 @@
             return;
         }
         
-        // Flatten cart values into a light JSON packet structure
         let flatData = keys.map(key => ({ id: key, qty: currentCart[key].qty }));
         
         document.getElementById('passthrough-customer-id').value = customerSelect.value;

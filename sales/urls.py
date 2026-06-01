@@ -12,4 +12,5 @@ urlpatterns = [
     path('order_queue', views.order_queue_dashboard, name='order_queue'),
     path('queue/clear/<int:order_id>/', views.process_queue_clearance, name='process_queue_clearance'),
     path('queue/checkout/<int:order_id>/', views.checkout_collection_detail, name='checkout_collection_detail'),
+    path('clear_order', views.review_checkout, name='review_checkout'),
 ]

@@ -2,25 +2,33 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.contrib.auth.forms import AuthenticationForm
 
 from .forms import UserRegistrationForm, UserLoginForm
 from .models import User
 
-# 1. MANAGEMENT (Authentication)
+
 def redirect_user_by_role(user):
-    """Sends the user straight to their specific operational layout"""
-    if user.role == User.Role.ADMIN:
+    """
+    Explicit traffic controller based on user roles.
+    Returns the name of the URL route they should be sent to.
+    """
+    
+    if user.role == 'ADMIN':
         return redirect('admin_dashboard')
-    elif user.role == User.Role.STORE_MANAGER:
+        
+    elif user.role == 'STORE_MANAGER':
         return redirect('inventory_dashboard')
+        
+    elif user.role == 'SALES':
+        return redirect('record_sale')
+        
     else:
-        return redirect('sales_dashboard')
-
-
+        # Fallback security route if something is weird
+        return redirect('login')
+    
+ 
 def user_login(request):
-    # Check 1: If they bounce here but are already logged in, send them away
-    if request.user.is_authenticated:
-        return redirect_user_by_role(request.user)
 
     if request.method == 'POST':
         form = UserLoginForm(request, data=request.POST)
@@ -52,10 +60,11 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     messages.info(request, "Logged out successfully.")
-    return redirect('user_login')
+    return redirect('login')
 
 
 # 2. STAFF PROFILING (Role Actions)
+@login_required 
 def can_manage_staff(user):
     return user.role in [User.Role.ADMIN, User.Role.STORE_MANAGER] or user.is_superuser
 
@@ -64,9 +73,9 @@ def can_manage_staff(user):
 def user_list(request):
     """Displays all employees working in the system"""
     staff_members = User.objects.all().order_by('role')
-    return render(request, 'users/user_list.html', {'system_users': staff_members})
+    return render(request, 'user_list.html', {'system_users': staff_members})
 
-
+@login_required
 def register_user(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)

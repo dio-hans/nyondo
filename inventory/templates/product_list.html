@@ -1,18 +1,81 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block title %}Warehouse Master Stock Ledger | Nyondo Hardware{% endblock %}
+
+{% block dash_links %}
+{% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+        <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">
+            Administrative Control Operations
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            
+            <!-- Catalog SKU Tab -->
+            <a href="{% url 'product_create' %}" 
+               class="p-3 rounded-lg text-center transition-all group shadow-sm border 
+               {% if request.resolver_match.url_name == 'product_create' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
+                <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'product_create' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
+                    Catalog SKU
+                </span>
+                <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'product_create' %} text-blue-400 {% else %} text-slate-400 {% endif %}">Add item profiles</span>
+            </a>
+
+            <!-- Movement Logs Tab -->
+            <a href="{% url 'stock_movement' %}" 
+               class="p-3 rounded-lg text-center transition-all group shadow-sm border 
+               {% if request.resolver_match.url_name == 'stock_movement' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
+                <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'stock_movement' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
+                    Movement Logs
+                </span>
+                <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'stock_movement' %} text-blue-400 {% else %} text-slate-400 {% endif %}">Audit track logs</span>
+            </a>
+
+            <!-- Onboard Vendor Tab -->
+            <a href="{% url 'supplier_registration' %}" 
+               class="p-3 rounded-lg text-center transition-all group shadow-sm border 
+               {% if request.resolver_match.url_name == 'supplier_registration' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
+                <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'supplier_registration' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
+                    Onboard Vendor
+                </span>
+                <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'supplier_registration' %} text-blue-400 {% else %} text-slate-400 {% endif %}">Supplier matrix</span>
+            </a>
+
+            <!-- Debt Ledger Tab -->
+            <a href="{% url 'supplier_debt_list' %}" 
+               class="p-3 rounded-lg text-center transition-all group shadow-sm col-span-2 sm:col-span-1 border 
+               {% if request.resolver_match.url_name == 'supplier_debt_list' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
+                <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'supplier_debt_list' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
+                    Debt Ledger
+                </span>
+                <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'supplier_debt_list' %} text-blue-400 {% else %} text-slate-400 {% endif %}">Procurement credit</span>
+            </a>
+
+        </div>
+    </div>
+    {% endif %}
+    
+{% endblock %}
 
 {% block content %}
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
     <div>
         <h1 class="text-xl font-black text-slate-900 uppercase tracking-tight">Warehouse Material Registry</h1>
-        <p class="text-xs text-slate-500 font-medium">Active tracking arrays for wholesale & retail inventory configurations.</p>
+        <p class="text-xs text-slate-500 font-medium mt-0.5">Active tracking arrays for wholesale & retail inventory configurations.</p>
     </div>
-    <a href="{% url 'product_create'%}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-sm self-start sm:self-center">
-        <i class="fa-solid fa-plus mr-1"></i> Register New Stock
-    </a>
+    <a href="{% url 'inventory_dashboard' %}" class="text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 tracking-wider flex items-center gap-1 transition-colors">
+           Back to dashboard
+        </a>
+    <!-- Protected Creation Route Trigger Block -->
+  {% if request.user.role == 'MANAGER' or request.user.role == 'STORE_MANAGER' %}
+            <a href="{% url 'product_create' %}"
+        <a href="{% url 'product_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-sm self-start sm:self-center flex items-center gap-1.5">
+             Register New Stock
+        </a>
+    {% endif %}
 </div>
 
+<!-- Main Inventory Registry Data Array Block -->
 <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-xs">
@@ -29,43 +92,59 @@
             <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                 {% for product in products %}
                 <tr class="hover:bg-slate-50/50 transition-colors">
+                    
+                    <!-- Identification Framework Block Column -->
                     <td class="p-4 pl-6">
-                        <p class="font-black text-slate-900 text-sm">{{ product.name }}</p>
-                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">ID: NYN-{{ product.id }}</p>
+                        <p class="font-black text-slate-900 text-sm uppercase leading-tight">{{ product.name }}</p>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-mono mt-1">ID: NYN-{{ product.id }}</p>
                     </td>
-                    <td class="p-4 text-center font-bold text-sm">
-                        <span class="px-2.5 py-1 rounded-lg {{ product.current_stock|default:0|yesno:'bg-slate-100 text-slate-800' }}">
-                            {{ product.current_stock }} units
+                    
+                    <!-- Running Unit Counts Column -->
+                    <td class="p-4 text-center font-bold text-sm whitespace-nowrap">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 font-mono">
+                            {{ product.current_stock|default:"0" }} {{ product.unit_of_measure|default:"units" }}
                         </span>
-                    <td class="p-4 text-center">
-                                {% if product.days_until_stockout <= 7 %}
-                                    <span class="text-rose-600 font-bold">
-                                        {{ product.days_until_stockout }} days left
-                                    </span>
-                                {% else %}
-                                    <span class="text-emerald-600 font-bold">
-                                        {{ product.days_until_stockout }} days left
-                                    </span>
-                                {% endif %}
-                    </td>    
                     </td>
-                    <td class="p-4 text-right font-bold text-slate-500">UGX {{ product.cost_price }}</td>
-                    <td class="p-4 text-right font-black text-slate-900">UGX {{ product.selling_price }}</td>
-                    <td class="p-4 text-center">
-                        {% if product.current_stock <= product.reorder_level %}
-                        <span class="px-2.5 py-1 text-[9px] font-black uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200 rounded-md animate-pulse">
-                            CRITICAL LOW STOCK
-                        </span>
+                    
+                    <!-- Run-out Prediction Indicator Logic Array -->
+                    <td class="p-4 text-center whitespace-nowrap font-mono">
+                        {% if product.days_until_stockout <= 7 %}
+                            <span class="text-rose-600 font-black px-2 py-0.5 bg-rose-50 border border-rose-100 rounded text-[11px]">
+                                {{ product.days_until_stockout|default:"0" }} days left
+                            </span>
                         {% else %}
-                        <span class="px-2.5 py-1 text-[9px] font-black uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
-                            HEALTHY MATRIX
-                        </span>
+                            <span class="text-emerald-600 font-bold">
+                                {{ product.days_until_stockout|default:"--" }} days left
+                            </span>
+                        {% endif %}
+                    </td>    
+                    
+                    <!-- Ledger Valuations Column Fields (UGX Local Currency Standardizations) -->
+                    <td class="p-4 text-right font-bold text-slate-500 font-mono whitespace-nowrap">
+                        UGX {{ product.cost_price|default:"0"|intcomma }}
+                    </td>
+                    <td class="p-4 text-right font-black text-slate-900 font-mono whitespace-nowrap">
+                        UGX {{ product.selling_price|default:"0"|intcomma }}
+                    </td>
+                    
+                    <!-- Dynamic Safe Run Level Alerts Layout Column -->
+                    <td class="p-4 text-center whitespace-nowrap">
+                        {% if product.current_stock <= product.reorder_level %}
+                            <span class="px-2.5 py-1 text-[9px] font-black uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200 rounded-md inline-block animate-pulse">
+                                <i class="fa-solid fa-triangle-exclamation mr-0.5"></i> CRITICAL LOW STOCK
+                            </span>
+                        {% else %}
+                            <span class="px-2.5 py-1 text-[9px] font-black uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md inline-block">
+                                HEALTHY MATRIX
+                            </span>
                         {% endif %}
                     </td>
                 </tr>
                 {% empty %}
+                <!-- Empty System Operational State Layout Box -->
                 <tr>
-                    <td colspan="5" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-slate-50/50">
+                    <td colspan="6" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-slate-50/20">
+                        <i class="fa-solid fa-boxes-prevent text-slate-300 text-xl block mb-2"></i>
                         No hardware inventory files registered in database matrix.
                     </td>
                 </tr>

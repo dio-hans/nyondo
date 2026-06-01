@@ -64,9 +64,16 @@ def review_checkout(request):
         payment_method = request.POST.get('payment_method', 'CASH')
         
         # Apply the Official Nyondo Transport Rule
-        if distance <= 10 and subtotal >= Decimal('500000'):
+        if distance == 0:
+            # Customer is using their own transport / picking up from warehouse
             transport_fee = Decimal('0.00')
+            
+        elif distance <= 10 and subtotal >= Decimal('500000.00'):
+            # Customer qualifies for the free delivery tier promotion
+            transport_fee = Decimal('0.00')
+            
         else:
+            # Standard flat rate delivery fee applied
             transport_fee = Decimal('30000.00')
             
         try:
@@ -195,6 +202,29 @@ def checkout_collection_detail(request, order_id):
     
     # Retrieve all items linked to this hardware order sheet
     order_items = SalesOrderItem.objects.filter(sales_order=order)
+    
+    context = {
+        'order': order,
+        'order_items': order_items,
+    }
+    return render(request, 'sales/checkout_collection_detail.html', context)
+
+
+def checkout_collection_detail(request, order_id):
+    # 1. Fetch the exact order using the ID from the URL
+    order = get_object_or_404(SalesOrder, id=order_id)
+    
+    # 2. If the user clicks "Clear & Post Transaction", it sends a POST request here
+    if request.method == 'POST':
+        order.status = 'COMPLETED'
+        order.save()
+        
+        messages.success(request, f"Order T-{order.id} has been successfully cleared and posted!")
+        # Redirect back to whichever dashboard you use as the main queue screen
+        return redirect('reports:dashboard') 
+        
+    # 3. Gather all item rows belonging to this order sheet so the template can loop them
+    order_items = SalesOrderItem.objects.filter(sales_order=order).select_related('product')
     
     context = {
         'order': order,

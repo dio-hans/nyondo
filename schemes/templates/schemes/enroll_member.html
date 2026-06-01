@@ -2,138 +2,167 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto my-8 px-4">
+    
+    <!-- Header Block -->
     <div class="mb-6">
-        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Enroll Scheme Client</h1>
-        <p class="text-sm text-slate-500">Register salary earners, set savings targets, capture deposits, and log security metrics.</p>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">
+            <i class="fa-solid fa-user-plus text-blue-600 mr-1.5 text-xl"></i> Enroll Scheme Client
+        </h1>
+        <p class="text-sm text-slate-500 mt-0.5">Register salary earners, set savings targets, capture deposits, and log security metrics.</p>
     </div>
 
+    <!-- Feedback Context Notifications Messages -->
     {% if messages %}
-    <div class="mb-6 space-y-2">
+    <div class="mb-6 space-y-2 animate-fade-in">
         {% for message in messages %}
-        <div class="p-4 rounded-lg text-sm font-medium {% if message.tags == 'error' %}bg-red-50 text-red-800{% else %}bg-green-50 text-green-800{% endif %}">
+        <div class="p-4 rounded-lg text-sm font-bold flex items-center gap-2 border {% if message.tags == 'error' %}bg-red-50 text-red-800 border-red-200{% else %}bg-green-50 text-green-800 border-green-200{% endif %}">
+            {% if message.tags == 'error' %}
+            <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+            {% else %}
+            <i class="fa-solid fa-circle-check text-green-500"></i>
+            {% endif %}
             {{ message }}
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
+    <!-- Configuration Enrollment Base Form Card -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <form method="POST" action="{% url 'enroll_customer' %}" class="p-6 sm:p-8 space-y-8">
+        <form method="POST" action="{% url 'schemes:enroll_customer' %}" class="p-6 sm:p-8 space-y-8">
             {% csrf_token %}
 
+            <!-- Section Step 1: Profile Mapping -->
             <div class="space-y-4">
-                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-2">Step 1: Primary Profile Identification</h3>
+                <h3 class="text-xs font-black text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-2">
+                    <i class="fa-solid fa-id-card text-slate-400 mr-1"></i> Step 1: Primary Profile Identification
+                </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <!-- Replace your old customer select element block with this text/datalist pair: -->
-<div>
-    <label for="customer_name" class="block text-sm font-semibold text-slate-700 mb-2">Customer Full Name *</label>
-    <input type="text" id="customer_name" name="customer_name" required list="existing_customers_list" 
-           placeholder="Type a new name or search existing..."
-           class="w-full rounded-lg border-slate-300 text-sm p-2.5 border">
-    
-    <!-- This hidden datalist contains existing names. If the user types a match, it matches. -->
-    <!-- If they type something completely brand new, it accepts it flawlessly! -->
-    <datalist id="existing_customers_list">
-        {% for c in customers %}
-        <option value="{{ c.name }}"></option>
-        {% endfor %}
-    </datalist>
-    <p class="text-xs text-slate-400 mt-1">If the client is new, simply type their full legal name into the box.</p>
-</div>
-
+                    
+                    <!-- Searchable Datalist Matching Combo Box Component -->
                     <div>
-                        <label for="nin" class="block text-sm font-semibold text-slate-700 mb-2">National ID Number (NIN) *</label>
+                        <label for="customer_name" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Customer Full Name *</label>
+                        <input type="text" id="customer_name" name="customer_name" required list="existing_customers_list" 
+                               placeholder="Type a new name or search existing..."
+                               class="w-full rounded-lg border border-slate-200 text-xs font-semibold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                        
+                        <datalist id="existing_customers_list">
+                            {% for c in customers %}
+                            <option value="{{ c.name }}"></option>
+                            {% endfor %}
+                        </datalist>
+                        <p class="text-[11px] text-slate-400 font-medium mt-1.5">If the client is new, simply type their full legal name into the box.</p>
+                    </div>
+
+                    <!-- National ID Parameter Field -->
+                    <div>
+                        <label for="nin" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">National ID Number (NIN) *</label>
                         <input type="text" id="nin" name="nin" required maxlength="14" placeholder="e.g. CM8601234XYZAB"
-                               class="w-full rounded-lg border-slate-300 text-sm p-2.5 border uppercase">
+                               class="w-full rounded-lg border border-slate-200 text-xs font-semibold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all uppercase tracking-wider">
                     </div>
 
+                    <!-- Telecom Contact Anchor Field -->
                     <div>
-                        <label for="phone" class="block text-sm font-semibold text-slate-700 mb-2">Active Telecom Number *</label>
+                        <label for="phone" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Active Telecom Number *</label>
                         <input type="text" id="phone" name="phone" required placeholder="e.g. 0772000000"
-                               class="w-full rounded-lg border-slate-300 text-sm p-2.5 border">
+                               class="w-full rounded-lg border border-slate-200 text-xs font-semibold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                     </div>
 
+                    <!-- Workplace / Institutional Allocation Tag -->
                     <div>
-                        <label for="employer" class="block text-sm font-semibold text-slate-700 mb-2">Employer / Institution Tag</label>
-                        <input type="text" id="employer" name="employer" placeholder="e.g. Ministry of Education, Nansana Branch"
-                               class="w-full rounded-lg border-slate-300 text-sm p-2.5 border">
+                        <label for="employer" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Employer / Institution Tag</label>
+                        <input type="text" id="employer" name="employer" placeholder="e.g. Ministry of Education, Nansana"
+                               class="w-full rounded-lg border border-slate-200 text-xs font-semibold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                     </div>
 
+                    <!-- Physical Residential Boundary Coordinates Coordinates -->
                     <div class="sm:col-span-2">
-                        <label for="home_address" class="block text-sm font-semibold text-slate-700 mb-2">Residential Home Address</label>
+                        <label for="home_address" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Residential Home Address</label>
                         <textarea id="home_address" name="home_address" rows="2" placeholder="e.g. Nansana West II, near Total Station"
-                                  class="w-full rounded-lg border-slate-300 text-sm p-2.5 border"></textarea>
+                                  class="w-full rounded-lg border border-slate-200 text-xs font-semibold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"></textarea>
                     </div>
                 </div>
             </div>
 
+            <!-- Section Step 2: Financial Caps Allocation -->
             <div class="space-y-4">
-                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-2">Step 2: Financial Commitments & Terms</h3>
+                <h3 class="text-xs font-black text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-2">
+                    <i class="fa-solid fa-scale-balanced text-slate-400 mr-1"></i> Step 2: Financial Commitments & Terms
+                </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    
+                    <!-- Goal Limit Cap Ceiling Target Amount -->
                     <div>
-                        <label for="target_amount" class="block text-sm font-semibold text-slate-700 mb-2">Target Cap Valuation (UGX) *</label>
+                        <label for="target_amount" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Target Cap Valuation (UGX) *</label>
                         <input type="number" id="target_amount" name="target_amount" required min="100000" placeholder="e.g. 3000000"
-                               class="w-full rounded-lg border-slate-300 text-sm p-2.5 border">
+                               class="w-full rounded-lg border border-slate-200 text-xs font-semibold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                     </div>
 
+                    <!-- Opening Direct Capital Input Float -->
                     <div>
-                        <label for="initial_deposit" class="block text-sm font-semibold text-slate-700 mb-2">Initial Deposit Amount (UGX) *</label>
+                        <label for="initial_deposit" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Initial Deposit Amount (UGX) *</label>
                         <input type="number" id="initial_deposit" name="initial_deposit" required min="0" value="0" placeholder="e.g. 500000"
-                               class="w-full rounded-lg border-slate-300 text-sm p-2.5 border">
+                               class="w-full rounded-lg border border-slate-200 text-xs font-semibold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                     </div>
 
+                    <!-- Deductions Operational Cadence Selector -->
                     <div>
-                        <label for="deposit_frequency" class="block text-sm font-semibold text-slate-700 mb-2">Intended Deposit Interval *</label>
-                        <select id="deposit_frequency" name="deposit_frequency" required class="w-full rounded-lg border-slate-300 text-sm p-2.5 border">
+                        <label for="deposit_frequency" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Intended Deposit Interval *</label>
+                        <select id="deposit_frequency" name="deposit_frequency" required class="w-full rounded-lg border border-slate-200 text-xs font-bold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-slate-700">
                             <option value="DAILY">Daily Cash Drop</option>
                             <option value="WEEKLY">Weekly Payment Runs</option>
                             <option value="MONTHLY" selected>Monthly Salary Deductions</option>
                         </select>
                     </div>
 
-                    <div class="flex items-center mt-8">
+                    <!-- Market Surcharge Insulation Switch Toggle -->
+                    <div class="flex items-start mt-4 sm:mt-8 bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <div class="flex items-center h-5">
                             <input id="price_lock_secured" name="price_lock_secured" type="checkbox"
-                                   class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-slate-300 rounded">
+                                   class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-slate-300 rounded cursor-pointer">
                         </div>
-                        <div class="ml-3 text-sm">
-                            <label for="price_lock_secured" class="font-semibold text-slate-700">Enforce Price Lock-In Clause</label>
-                            <p class="text-xs text-slate-400">If checked, material values are frozen against current inventory depot prices.</p>
+                        <div class="ml-3 text-xs">
+                            <label for="price_lock_secured" class="font-black text-slate-800 uppercase tracking-tight cursor-pointer">Enforce Price Lock-In Clause</label>
+                            <p class="text-[11px] text-slate-400 font-medium mt-0.5">If checked, material values are frozen against current inventory depot prices.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Section Step 3: Security & Next of Kin Allocation -->
             <div class="space-y-4">
-                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-2">Step 3: Next of Kin Security Information</h3>
+                <h3 class="text-xs font-black text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-2">
+                    <i class="fa-solid fa-shield-halved text-slate-400 mr-1"></i> Step 3: Next of Kin Security Information
+                </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label for="nok_name" class="block text-sm font-semibold text-slate-700 mb-2">Full Name *</label>
+                        <label for="nok_name" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Full Name *</label>
                         <input type="text" id="nok_name" name="nok_name" required placeholder="e.g. Sarah Namubiru"
-                               class="w-full rounded-lg border-slate-300 text-sm p-2.5 border">
+                               class="w-full rounded-lg border border-slate-200 text-xs font-semibold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                     </div>
                     <div>
-                        <label for="nok_phone" class="block text-sm font-semibold text-slate-700 mb-2">Phone Number *</label>
+                        <label for="nok_phone" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Phone Number *</label>
                         <input type="text" id="nok_phone" name="nok_phone" required placeholder="e.g. 0701XXXXXX"
-                               class="w-full rounded-lg border-slate-300 text-sm p-2.5 border">
+                               class="w-full rounded-lg border border-slate-200 text-xs font-semibold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                     </div>
                     <div>
-                        <label for="nok_relationship" class="block text-sm font-semibold text-slate-700 mb-2">Relationship *</label>
+                        <label for="nok_relationship" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Relationship *</label>
                         <input type="text" id="nok_relationship" name="nok_relationship" required placeholder="e.g. Spouse / Sister"
-                               class="w-full rounded-lg border-slate-300 text-sm p-2.5 border">
+                               class="w-full rounded-lg border border-slate-200 text-xs font-semibold p-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                <a href="#" class="px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
+            <!-- Execution Action Call Panel Buttons -->
+            <div class="flex items-center justify-end gap-3 pt-5 border-t border-slate-100">
+                <a href="{% url 'schemes:schemes_list' %}" class="px-4 py-2.5 text-xs font-black uppercase tracking-wider text-slate-500 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-700 transition-all">
                     Cancel
                 </a>
-                <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-all">
+                <button type="submit" class="px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-all">
                     Establish Scheme Balance Account
                 </button>
             </div>
         </form>
     </div>
 </div>
-{% endblock %}
+{% endblock %}  

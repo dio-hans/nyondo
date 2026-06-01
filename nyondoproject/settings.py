@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'users',
     'crispy_tailwind',
     'crispy_forms',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -127,7 +128,7 @@ AUTH_USER_MODEL = 'users.User'
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'tailwind' #added by me for the crispy_bootstrap package i installed
 CRISPY_TEMPLATE_PACK = 'tailwind'
 AUTH_USER_MODEL = 'users.User'
-LOGIN_URL = 'user_login'   
-LOGIN_REDIRECT_URL = 'user_login'
+LOGIN_URL = 'login'   
+# LOGIN_REDIRECT_URL = 'user_login'
 # During development/presentation, output emails to the terminal console
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

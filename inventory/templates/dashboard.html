@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory Executive Terminal | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto my-8 px-4 space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 gap-2">
+        <div>
+            <h1 class="text-sm font-black text-slate-900 uppercase tracking-wider">
+                System Management Dashboard
+            </h1>
+            <p class="text-xs text-slate-400 font-medium mt-0.5">Real-time valuation summaries, velocity tracking calculations, and supply pipelines.</p>
+        </div>
+        <div class="text-right font-mono text-[11px] text-slate-400">
+            Active Session Context: Manager Mode
+        </div>
+    </div>
+
+    {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+        <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">
+            Administrative Control Operations
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            
+            <a href="{% url 'product_list' %}" class="bg-white border border-slate-200 hover:border-slate-300 p-3 rounded-lg text-center transition-all group shadow-sm">
+                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600">
+                    Product Registry
+                </span>
+                <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Master balances</span>
+            </a>
+
+            <a href="{% url 'product_create' %}" class="bg-white border border-slate-200 hover:border-slate-300 p-3 rounded-lg text-center transition-all group shadow-sm">
+                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600">
+                    Catalog SKU
+                </span>
+                <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Add item profiles</span>
+            </a>
+
+            <a href="{% url 'stock_movement' %}" class="bg-white border border-slate-200 hover:border-slate-300 p-3 rounded-lg text-center transition-all group shadow-sm">
+                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600">
+                    Movement Logs
+                </span>
+                <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Audit track logs</span>
+            </a>
+
+            <a href="{% url 'procurement:supplier_registration' %}" class="bg-white border border-slate-200 hover:border-slate-300 p-3 rounded-lg text-center transition-all group shadow-sm">
+                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600">
+                    Onboard Vendor
+                </span>
+                <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Supplier matrix</span>
+            </a>
+
+            <a href="{% url 'procurement:supplier_debt_list' %}" class="bg-white border border-slate-200 hover:border-slate-300 p-3 rounded-lg text-center transition-all group shadow-sm col-span-2 sm:col-span-1">
+    <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600">
+        Debt Ledger
+    </span>
+    <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Procurement credit</span>
+</a>
+
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Capital Asset Investment</span>
+            <span class="text-lg font-black text-slate-900 mt-1 block">UGX {{ total_stock_value|default:"0" }}</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Expected Margin Yield</span>
+            <span class="text-lg font-black text-emerald-600 mt-1 block">UGX {{ expected_profit|default:"0" }}</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Active Monitored SKUs</span>
+            <span class="text-lg font-black text-slate-900 mt-1 block">{{ total_products }}</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Depleted Reorder Hazards</span>
+            <span class="text-lg font-black {% if low_stock_products.count > 0 %}text-rose-600{% else %}text-slate-900{% endif %} mt-1 block">
+                {{ low_stock_products.count }} Items
+            </span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        </div>
+
+</div>
+{% endblock %}

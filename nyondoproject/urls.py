@@ -29,6 +29,5 @@ urlpatterns = [
     path('schemes/', include('schemes.urls')),
     path('reports/', include('reports.urls')),
     path('', include('users.urls')),
-    path('dashboard/', include('reports.urls')),
 ]
 

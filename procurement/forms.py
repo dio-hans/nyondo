@@ -2,6 +2,7 @@ from django import forms
 from .models import PurchaseOrder, Supplier
 from inventory.models import Product
 
+
 class UnifiedPurchaseForm(forms.Form):
     # Core Inventory Details
     product = forms.ModelChoiceField(

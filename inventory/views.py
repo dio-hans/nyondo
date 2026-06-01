@@ -1,33 +1,33 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.db.models import F
 from django.db import transaction
-import datetime
-from .models import Product, StockMovement, Category
-# Import models from your procurement app to track supplier credits
-from procurement.models import Supplier, PurchaseOrder 
-from .models import AuditLog
+from django.utils import timezone
+from django.db.models import F
+from procurement.models import PurchaseItem, Supplier
+
+from .models import Product, StockMovement, Category, AuditLog
+from procurement.models import PurchaseOrder 
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 
-
+@login_required
 def product_list(request):
     products = Product.objects.all().order_by('name')
     context = {'products': products}
     return render(request, 'product_list.html', context)
 
-
+@login_required
 def inventory_dashboard(request):
     products = Product.objects.all()
     for product in products:
         if product.average_daily_sales > 0:
             product.days_until_stockout = round(
-            product.current_stock / product.average_daily_sales
-        )
+                product.current_stock / product.average_daily_sales
+            )
         else:
             product.days_until_stockout = "Unlimited"
     total_products = products.count()
     
-    # Compare current stock levels to custom reorder levels dynamically
     low_stock_products = Product.objects.filter(current_stock__lte=F('reorder_level'))
 
     total_stock_value = sum(p.current_stock * p.cost_price for p in products)
@@ -46,101 +46,96 @@ def inventory_dashboard(request):
 
 
 def product_save(request, product_id=None):
-    # 1. SETUP: If an ID is passed, we are EDITING. If not, we are CREATING.
-    if product_id:
-        product = get_object_or_404(Product, id=product_id)
-        page_title = f"Modify Item: {product.name}"
-    else:
-        product = None
-        page_title = "Register New Inventory Product"
+    """
+    Enables store managers to correct historical manual entry mistakes,
+    modify product details, or shift cost pricing configurations.
+    """
+    product = get_object_or_404(Product, id=product_id)
+    page_title = f"Administrative Corrections: {product.name}"
 
-    # 2. POST FLOW: Saving the form data
     if request.method == "POST":
         name = request.POST.get('name', '').strip()
         cost = float(request.POST.get('cost_price', 0))
         price = float(request.POST.get('selling_price', 0))
         uom = request.POST.get('unit_of_measure', '')
-        current_stock = int(request.POST.get('current_stock', 0))
+        current_stock = int(request.POST.get('quantity', 0))  # Maps safely to your input tag name
         reorder_lvl = int(request.POST.get('reorder_level', 10))
         cat_id = request.POST.get('category')
 
-        # Safety fallback for the Category rule
         if cat_id:
-            try:
-                category_obj = Category.objects.get(id=cat_id)
-            except Category.DoesNotExist:
-                category_obj, _ = Category.objects.get_or_create(name="General Hardware")
+            category_obj = get_object_or_404(Category, id=cat_id)
         else:
             category_obj, _ = Category.objects.get_or_create(name="General Hardware")
 
-        if product:
-            # 👉 EDIT ROUTINE: Update fields on the existing database row
-            product.name = name
-            product.category = category_obj
-            product.cost_price = cost
-            product.selling_price = price
-            product.unit_of_measure = uom
-            product.current_stock = current_stock
-            product.reorder_level = reorder_lvl
-            product.save()
-            messages.success(request, f"Changes committed to '{name}' successfully.")
-        else:
-            # 👉 CREATE ROUTINE: Ingest a brand new row into the table
-            sku = f"NYO-{category_obj.name[:2].upper()}-{name[:3].upper()}-{int(timezone.now().timestamp())}"[:20]
-            Product.objects.create(
-                name=name,
-                category=category_obj,
-                cost_price=cost,
-                selling_price=price,
-                unit_of_measure=uom,
-                sku=sku,
-                current_stock=current_stock,
-                reorder_level=reorder_lvl
-            )
-            messages.success(request, f"New product '{name}' registered smoothly.")
+        if price <= cost:
+            messages.error(request, "Correction Rejected: Selling price must exceed system unit cost parameters.")
+            return redirect('product_save', product_id=product.id)
 
+        # Log changes before committing updates to the database
+        old_stock = product.current_stock
+        
+        product.name = name
+        product.category = category_obj
+        product.cost_price = cost
+        product.selling_price = price
+        product.unit_of_measure = uom
+        product.current_stock = current_stock
+        product.reorder_level = reorder_lvl
+        product.save()
+
+        # If manual stock override occurred, record a specific movement log entry
+        if old_stock != current_stock:
+            StockMovement.objects.create(
+                product=product,
+                transaction_type='IN' if current_stock > old_stock else 'OUT',
+                quantity=abs(current_stock - old_stock),
+                notes=f"Manual discrepancy correction override log. Adjusted from {old_stock} to {current_stock}."
+            )
+
+        messages.success(request, f"Administrative parameters for '{name}' successfully altered and re-indexed.")
         return redirect('product_list')
 
-    # 3. GET FLOW: Rendering the page layout with existing data (if editing)
     categories = Category.objects.all()
     context = {
-        'product': product,      # Will be None when creating, full object when editing
+        'product': product,
         'categories': categories,
-        'page_title': page_title
+        'page_title': page_title,
+        'suppliers': None  # Supplier overrides are blocked during basic attribute correction
     }
-    return render(request, 'product_form.html', context)
+    return render(request, 'inventory/product_form.html', context)
 
 
 def product_create(request):
     """
-    Handles registering completely new items lines (e.g. adding 16mm iron bars for the first time)
-    as well as restocking existing items lines under smart financial payment conditions.
+    Unified Inbound Flow: Handles standard cash restocks, brand new inventory registrations, 
+    and multi-app credit liabilities within a single transactional interface.
     """
     if request.method == "POST":
         name = request.POST.get('name', '').strip()
         cat_id = request.POST.get('category')
         cost = float(request.POST.get('cost_price', 0))
         price = float(request.POST.get('selling_price', 0))
-        uom = request.POST.get('unit_of_measure', 'Pcs') or 'Pcs'
+        uom = request.POST.get('unit_of_measure', 'PCS')
         reorder_lvl = int(request.POST.get('reorder_level', 10))
-        initial_stock = int(request.POST.get('current_stock', 0))
+        qty_arriving = int(request.POST.get('quantity', 0))
         
+        # Credit parameters
         is_credit = request.POST.get('is_credit') == 'on'
         supplier_id = request.POST.get('supplier_id')
+        invoice_no = request.POST.get('invoice_number', '').strip()
+        amount_paid = float(request.POST.get('amount_paid', 0))
+        notes = request.POST.get('notes', '').strip()
 
-        # Rule Validation: selling price must outpace procurement costs
+        # Core pricing integrity check
         if price <= cost:
-            messages.error(request, "Critical Validation Error: Selling price must be greater than cost price.")
+            messages.error(request, "Integrity Error: Unit selling price must exceed warehouse cost price.")
             return redirect('product_create')
 
-        # Rule Validation: Credit mode requires an assigned factory supplier depot
         if is_credit and not supplier_id:
-            messages.error(request, "Credit Exception: You must select a Supplier profile when logging credit arrivals.")
+            messages.error(request, "Please select a supplier.")
             return redirect('product_create')
 
-        # 🚀 THE SAFETY ENGINE FIX:
-        # Instead of get_object_or_404 crashing, check if the category exists.
-        # If it doesn't exist or none was selected, create/fetch a default one on the fly!
+        # Fallback category handler
         if cat_id:
             try:
                 category = Category.objects.get(id=cat_id)
@@ -149,22 +144,19 @@ def product_create(request):
         else:
             category, _ = Category.objects.get_or_create(name="General Hardware")
 
-        # Execution using atomic transaction guards to preserve database state integrity
+        # Atomic Execution: Updates inventory records and registers liability simultaneously
         with transaction.atomic():
-            # Check if this item name already exists in this category (Restocking Flow)
             product_match = Product.objects.filter(name__iexact=name, category=category).first()
 
             if product_match:
-                # 1. Update matching product data values directly
-                product_match.current_stock += initial_stock
+                product_match.current_stock += qty_arriving
                 product_match.cost_price = cost
                 product_match.selling_price = price
                 product_match.save()
                 product = product_match
-                action_text = f"Restocked {initial_stock} units of existing item line: {name}."
+                action_text = f"Restocked {qty_arriving} {uom} onto existing item line: {name}."
             else:
-                # 2. Build out a custom unique SKU index string and save a new Product line
-                sku = f"NYO-{category.name[:2].upper()}-{name[:3].upper()}-{datetime.datetime.now().strftime('%S')}"
+                sku = f"NYO-{category.name[:2].upper()}-{name[:3].upper()}-{int(timezone.now().timestamp())}"[:20]
                 product = Product.objects.create(
                     name=name,
                     category=category,
@@ -173,55 +165,80 @@ def product_create(request):
                     unit_of_measure=uom,
                     sku=sku,
                     reorder_level=reorder_lvl,
-                    current_stock=initial_stock
+                    current_stock=qty_arriving
                 )
-                action_text = f"Registered brand new inventory product profile: {name}."
+                action_text = f"Registered brand new catalog line product profile: {name}."
 
-            # 3. Write universal Double-Entry audit movement record
+            # Master Inventory History Trail Registration
             StockMovement.objects.create(
                 product=product,
                 transaction_type='IN',
-                quantity=initial_stock,
+                quantity=qty_arriving,
                 notes='Credit Supply Consolidated' if is_credit else 'Cash Sourced Intake'
             )
 
-            # 4. If credit toggle was active, process accounts payable values automatically
+            # Execution block for Procurement integration (All cleanly grouped inside is_credit)
             if is_credit:
                 supplier = get_object_or_404(Supplier, id=supplier_id)
-                batch_liability = initial_stock * cost
-                
-                if hasattr(supplier, 'total_owed'):
-                    supplier.total_owed += batch_liability
+                total_calculated_amount = qty_arriving * cost
+                balance_outstanding = total_calculated_amount - amount_paid
+
+                # Determine tracking status parameters based on balance values
+                if balance_outstanding <= 0:
+                    status = 'PAID'
+                elif amount_paid > 0:
+                    status = 'PARTIAL'
+                else:
+                    status = 'PENDING'
+
+                # 1. Update Supplier Account Balance Summary
+                if hasattr(supplier, 'total_owed') and balance_outstanding > 0:
+                    supplier.total_owed += balance_outstanding
                     supplier.save()
 
-                PurchaseOrder.objects.create(
+                # 2. Write Master Purchase Invoice Ledger Row (Brought out of the old 'else' trap)
+                purchase_order = PurchaseOrder.objects.create(
                     supplier=supplier,
-                    product=product,
-                    quantity=initial_stock,
-                    unit_cost=cost,
-                    balance=batch_liability,
-                    served_by=request.user if request.user.is_authenticated else None
+                    invoice_number=invoice_no,
+                    total_amount=total_calculated_amount,
+                    amount_paid=amount_paid,
+                    balance=max(0.0, balance_outstanding),
+                    payment_status=status,
+                    notes=notes if notes else f"Automated intake for {name}"
                 )
-                action_text += f" UGX {batch_liability:,.0f} logged as credit debt to {supplier.name}."
 
-            # Safe Audit logging check
+                # 3. Create Row Sub-Item Breakdown Item
+                PurchaseItem.objects.create(
+                    purchase_order=purchase_order,
+                    product=product,
+                    quantity=qty_arriving,
+                    unit_cost=cost,
+                    subtotal=total_calculated_amount
+                )
+                action_text += f" UGX {balance_outstanding:,.0f} added to outstanding credit tracking under {supplier.name}."
+
+            # Internal Security Audit Logging
             AuditLog.objects.create(
                 user=request.user if request.user.is_authenticated else None,
-                action=f"Registered product {product.name}"
-            )    
+                action=f"Inbound Intake executed for {product.name} (Qty: {qty_arriving})"
+            )
 
             messages.success(request, action_text)
             return redirect('product_list')
 
-    # GET Request processing
+    # GET request contexts
     categories = Category.objects.all()
-    suppliers = Supplier.objects.all()
+    suppliers = Supplier.objects.filter(is_active=True)
+    all_existing_products = Product.objects.all().order_by('name')
     
     context = {
         'categories': categories,
-        'suppliers': suppliers
+        'suppliers': suppliers,
+        'existing_products': all_existing_products,
+        'product': None
     }
     return render(request, 'product_form.html', context)
+
 
 
 def product_detail(request, product_id):
@@ -242,3 +259,38 @@ def product_detail(request, product_id):
         'is_low_stock': is_low_stock
     }
     return render(request, 'inventory/product_detail.html', context)
+
+
+def stock_movement_history(request):
+    """
+    Renders a master audit trail of all warehouse item fluctuations
+    """
+    # Simply fetch every movement row without checking roles or log status
+    movements = StockMovement.objects.all().select_related('product').order_by('-created_at')
+
+    context = {
+        'movements': movements
+    }
+    return render(request, 'stock_movement.html', context)
+
+# inventory/views.py
+
+def supplier_create(request):
+
+    if request.method == "POST":
+
+        Supplier.objects.create(
+            name=request.POST.get('name'),
+            phone_number=request.POST.get('phone_number'),
+            email=request.POST.get('email', ''),
+            address=request.POST.get('address', ''),
+            contact_person=request.POST.get('contact_person', ''),
+            product=Product.objects.first()
+        )
+
+        messages.success(request, "Supplier created successfully.")
+        return redirect('product_create')
+
+    return render(request, 'supplier_form.html')
+
+# In your procurement/views.py

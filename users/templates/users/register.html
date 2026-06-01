@@ -1,22 +1,42 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags static%}
+{% load crispy_forms_tags static %}
 
 {% block header %}{% endblock %}
 
-    {% block title %}
-    Registration Page
-{% endblock %}
+{% block title %}Account Registration | Nyondo Hardware{% endblock %}
 
 {% block content %}
-    <div class="reg-form">
-        <form method="POST" novalidate>
-            {% csrf_token %}
-            {{form |crispy}}
-
-            <button type="submit">Register</button>
-        
-
-           </form>
+<div class="max-w-md mx-auto my-12 px-4">
     
+    <div class="text-center mb-6">
+        <div class="w-12 h-12 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3 shadow-sm">
+            <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h1 class="text-lg font-black text-slate-900 uppercase tracking-wider">System Registration</h1>
+        <p class="text-xs text-slate-400 font-medium mt-0.5">Establish secure user credentials for hardware inventory and ledger tracking.</p>
     </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8">
+        <form method="POST" action="" novalidate class="space-y-4 text-xs font-bold text-slate-700">
+            {% csrf_token %}
+            
+            <div class="space-y-3 entry-crispy-override">
+                {{ form|crispy }}
+            </div>
+
+            <div class="pt-4 border-t border-slate-100">
+                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-id-card text-[10px]"></i> Complete Account Registration
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="text-center mt-4">
+        <p class="text-[11px] text-slate-400 font-medium">
+            Already possess active workspace credentials? 
+            <a href="{% url 'login' %}" class="text-indigo-600 font-bold hover:underline transition">Authenticate here</a>
+        </p>
+    </div>
+</div>
 {% endblock %}

@@ -8,14 +8,12 @@ urlpatterns = [
 
     path('staff/', views.user_list, name='user_list'),
 
-    path('register/', views.register_user, name='register_user'),
+    path('register/', views.register_user, name='register'),
 
     path('toggle/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'),
 
     # 1. Form where user submits their email address
-    path('password-reset/', 
-         auth_views.PasswordResetView.as_view(template_name='users/password_reset_form.html'), 
-         name='password_reset'),
+    path('password-reset/', auth_views.PasswordResetView.as_view(template_name='users/password_reset_form.html'),  name='password_reset'),
          
     # 2. Success screen showing that an email was dispatched
     path('password-reset/done/', 
@@ -31,4 +29,5 @@ urlpatterns = [
     path('password-reset-complete/', 
          auth_views.PasswordResetCompleteView.as_view(template_name='registration/password_reset_complete.html'), 
          name='password_reset_complete'),
+         path('logout/', views.logout, name='logout')
 ]
