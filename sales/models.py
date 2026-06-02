@@ -48,10 +48,8 @@ class Customer(models.Model):
         return self.name
 
 
-# =========================================
-# SALES ORDER
-# =========================================
 
+# SALES ORDER
 class SalesOrder(models.Model):
 
     PAYMENT_METHODS = [
@@ -78,7 +76,9 @@ class SalesOrder(models.Model):
 
         Customer,
 
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
 
     )
 

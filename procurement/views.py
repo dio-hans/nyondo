@@ -1,9 +1,10 @@
+from decimal import Decimal
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
 
-from django.db.models import Sum, F, DecimalField
-from django.db.models.functions import Coalesce
+from django.db.models import Sum
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .forms import UnifiedPurchaseForm
@@ -17,15 +18,9 @@ def is_admin_or_manager(user):
     """Allows Accounts/Admin and Store Managers to manage supply operations."""
     return user.is_authenticated and (user.role in ['ADMIN', 'MANAGER'] or user.is_superuser)
 
-def is_admin_only(user):
-    """Strictly locks financial debt tracking and dashboards down to Accounts/Admin records."""
-    return user.is_authenticated and (user.role == 'ADMIN' or user.is_superuser)
-
-
 # CORE PROCUREMENTS FUNCTIONALITIES
 
 @login_required
-@user_passes_test(is_admin_or_manager, login_url='product_list', redirect_field_name=None)
 def record_purchase(request):
     suppliers = Supplier.objects.filter(is_active=True)
     products = Product.objects.all()
@@ -121,7 +116,6 @@ def record_purchase(request):
 
 
 @login_required
-@user_passes_test(is_admin_or_manager, login_url='product_list', redirect_field_name=None)
 def receive_credit_stock(request):
     suppliers = Supplier.objects.filter(is_active=True)
     products = Product.objects.all()
@@ -134,7 +128,6 @@ def receive_credit_stock(request):
 
 
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
 def procurement_dashboard(request):
     total_orders = PurchaseOrder.objects.count()
     total_spent = PurchaseOrder.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
@@ -163,7 +156,6 @@ def procurement_dashboard(request):
 
 
 @login_required
-@user_passes_test(is_admin_or_manager, login_url='product_list', redirect_field_name=None)
 def record_procurement_entry(request):
     if request.method == 'POST':
         form = UnifiedPurchaseForm(request.POST)
@@ -230,7 +222,6 @@ def record_procurement_entry(request):
     return render(request, 'procurement/record_purchase.html', {'form': form})
 
 @login_required()
-@login_required()
 def supplier_debt_list(request):
     debtors = []
     total_global_debt = 0
@@ -270,3 +261,23 @@ def supplier_debt_list(request):
     }
     
     return render(request, 'procurement/supplier_debt_list.html', context)
+
+@login_required
+def clear_supplier_credit(request, debt_id):
+    if request.method == "POST":
+        purchase_order = get_object_or_404(PurchaseOrder, id=debt_id)
+        payment_amount = Decimal(request.POST.get('amount_paid', '0.00'))
+
+        if payment_amount <= 0:
+            messages.error(request, "Please enter a valid payment amount.")
+        elif payment_amount > purchase_order.balance:
+            messages.error(request, f"Cannot pay more than the outstanding balance of UGX {purchase_order.balance}")
+        else:
+            # 1. Deduct the liability balance
+            purchase_order.balance -= payment_amount
+            purchase_order.save()
+            
+            # 2. Success message back to dashboard
+            messages.success(request, f"Successfully paid UGX {payment_amount} to supplier!")
+            
+    return redirect('unpaid_supplier')

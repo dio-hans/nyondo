@@ -116,12 +116,21 @@
     </div>
 
     <div class="no-print mt-6 flex flex-col sm:flex-row gap-3">
-        <button onclick="window.print()" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-print text-amber-500 text-[11px]"></i> Print System Invoice
+        <a href="{% url 'checkout_collection_detail' order.id %}" target="_blank" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+             Print System Invoice
         </button>
-        <a href="{% url 'record_sale' %}" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-center font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all border border-slate-200 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-square-plus text-blue-500 text-[11px]"></i> Next POS Order
+        <a href="{% url 'order_queue' %}" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-center font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all border border-slate-200 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+             Next POS Order
         </a>
     </div>
 </div>
+
+<script>
+    // Automatically triggers the system print manager as soon as the invoice finishes drawing
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            window.print();
+        }, 300);
+    });
+</script>
 {% endblock %}

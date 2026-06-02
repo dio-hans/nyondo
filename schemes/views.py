@@ -3,10 +3,11 @@ from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
+from schemes.models import SavingsScheme
 
 from sales.models import Customer
 from inventory.models import Product
-from .models import SavingsScheme, SchemeDeposit
+from .models import SchemeDeposit
 
 
 # ROLE PROTECTION HELPER FUNCTIONS

@@ -1,5 +1,64 @@
 {% extends 'base.html' %}
 
+   {% block dash_links %}
+            {% if request.user.role == 'CASHIER' %}
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">
+                Cashier Control Operations
+                </h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                 
+                    <a href="{% if request.user.role == 'CASHIER' %}{% url 'order_queue' %}{% endif %}" 
+                       class="p-3 rounded-lg text-center transition-all group shadow-sm border 
+                       {% if request.resolver_match.url_name == 'inventory_dashboard' or request.resolver_match.url_name == 'procurement_dashboard' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide text-slate-800 group-hover:text-blue-600">
+                            Overview Dashboard
+                        </span>
+                        <span class="block text-[10px] font-medium mt-0.5 text-slate-400">System metrics</span>
+                    </a>
+                    {% if request.user.role == 'CASHIER' %}
+                    <a href="{% url 'schemes_list' %}" 
+                       class="p-3 rounded-lg text-center transition-all group shadow-sm border 
+                       {% if request.resolver_match.url_name == 'product_list' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide text-slate-800 group-hover:text-blue-600">
+                            Scheme Management List
+                        </span>
+                        <span class="block text-[10px] font-medium mt-0.5 text-slate-400">Master balances</span>
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'stock_movement' %}" 
+                       class="p-3 rounded-lg text-center transition-all group shadow-sm border 
+                       {% if request.resolver_match.url_name == 'stock_movement' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide text-slate-800 group-hover:text-blue-600">
+                            Stock Movements
+                        </span>
+                        <span class="block text-[10px] font-medium mt-0.5 text-slate-400">Audit track logs</span>
+                    </a>
+                    {% if request.user.role == 'MANAGER' %}
+                    <a href="{% url 'supplier_registration' %}" 
+                       class="p-3 rounded-lg text-center transition-all group shadow-sm border 
+                       {% if request.resolver_match.url_name == 'supplier_registration' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide text-slate-800 group-hover:text-blue-600">
+                            Onboard Vendor
+                        </span>
+                        <span class="block text-[10px] font-medium mt-0.5 text-slate-400">Supplier matrix</span>
+                    </a>
+                    {% endif %}
+
+                    <a href="{% url 'supplier_debt_list' %}" 
+                       class="p-3 rounded-lg text-center transition-all group shadow-sm col-span-2 sm:col-span-1 border 
+                       {% if request.resolver_match.url_name == 'supplier_debt_list' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide text-slate-800 group-hover:text-blue-600">
+                            Debt Ledger
+                        </span>
+                        <span class="block text-[10px] font-medium mt-0.5 text-slate-400">Procurement credit</span>
+                    </a>
+
+                </div>
+            </div>
+            {% endif %}
+        {% endblock %}
+
 {% block content %}
 <div class="max-w-6xl mx-auto my-8 px-4 space-y-8">
     
@@ -10,10 +69,10 @@
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{% url 'record_purchase' %}" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-all flex items-center gap-1.5">
-                <i class="fa-solid fa-plus text-xs"></i> Record Standard Purchase
+             Record Standard Purchase
             </a>
             <a href="{% url 'receive_credit_stock' %}" class="px-4 py-2 text-sm font-medium text-amber-800 bg-amber-100 rounded-lg hover:bg-amber-200 transition-all flex items-center gap-1.5">
-                <i class="fa-solid fa-truck-ramp-box text-xs"></i> Receive Credit Stock
+                 Receive Credit Stock
             </a>
         </div>
     </div>
@@ -57,7 +116,7 @@
             </div>
             <div class="pt-2">
                 <a href="{% url 'supplier_debt_list' %}" class="block text-center text-xs font-semibold text-blue-600 hover:text-blue-700 bg-slate-50 hover:bg-slate-100 py-2 rounded-lg transition-all">
-                    Open Debt Matrix Ledger →
+                    Open Debt Matrix Ledger
                 </a>
             </div>
         </div>

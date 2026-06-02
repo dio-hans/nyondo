@@ -23,27 +23,26 @@
     <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-4" id="pending-orders-tray">
         {% for order in pending_orders %}
             
-            <a href="{% url 'checkout_collection_detail' order.id %}" class="bg-slate-900 border border-slate-800 hover:border-blue-500 rounded-xl p-4 aspect-square flex flex-col justify-between items-center text-center shadow-sm relative group hover:bg-slate-800 transition-all cursor-pointer">
+            <a href="{% url 'checkout_collection_detail' order.id %}" class="bg-sky-950 border border-sky-900 hover:border-blue-500 rounded-xl p-4 aspect-square flex flex-col justify-between items-center text-center shadow-sm relative group hover:bg-sky-900 transition-all cursor-pointer">
                 
-                <div class="text-[11px] font-black tracking-wider text-slate-200 uppercase truncate w-full pt-1">
+                <div class="text-[11px] font-black tracking-wider text-sky-100 uppercase truncate w-full pt-1 group-hover:text-sky-300 transition-colors">
                     {% if order.customer.name %}
                         {{ order.customer.name|truncatechars:14 }}
                     {% else %}
-                        T-{{ order.id }}
+                        Token-{{ order.id }}
                     {% endif %}
                 </div>
 
                 <div class="space-y-0.5 w-full">
-                    <span class="block text-[8px] font-black text-slate-500 uppercase tracking-widest font-mono">Total Balance</span>
-                    <div class="text-xs font-mono font-black text-emerald-400 group-hover:text-blue-400 transition-colors truncate">
+                    <span class="block text-[8px] font-black text-sky-400 uppercase tracking-widest font-mono">Total Balance</span>
+                    <div class="text-xs font-mono font-black text-emerald-400 group-hover:text-emerald-300 transition-colors truncate">
                         UGX {{ order.total_amount|default:"0"|intcomma }}
                     </div>
                 </div>
 
-                <div class="text-[9px] font-black text-slate-400 tracking-wider uppercase bg-slate-800 px-2 py-0.5 rounded border border-slate-700/60 w-full truncate mb-1">
-                    
+                <div class="text-[9px] font-black text-sky-300 tracking-wider uppercase bg-sky-900/80 px-2 py-0.5 rounded border border-sky-800/60 w-full truncate mb-1">
                     {% if order.served_by.username %}
-                        {{ order.served_by.username }}
+                        <i class="fa-solid fa-user text-[8px] me-1 text-sky-400"></i>{{ order.served_by.username }}
                     {% else %}
                         System
                     {% endif %}
@@ -52,7 +51,6 @@
 
         {% empty %}
             <div class="col-span-full bg-white border border-dashed border-slate-200 rounded-xl p-16 text-center text-xs text-slate-400 font-bold uppercase tracking-wider space-y-2">
-                
                 <p class="max-w-xs mx-auto leading-relaxed">
                     No active outstanding order slips or table balances currently pending checkout collection.
                 </p>

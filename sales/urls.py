@@ -13,4 +13,6 @@ urlpatterns = [
     path('queue/clear/<int:order_id>/', views.process_queue_clearance, name='process_queue_clearance'),
     path('queue/checkout/<int:order_id>/', views.checkout_collection_detail, name='checkout_collection_detail'),
     path('clear_order', views.review_checkout, name='review_checkout'),
+    path('invoice/<int:order_id>/', views.invoice_detail_receipt, name='invoice_detail'),
+    
 ]

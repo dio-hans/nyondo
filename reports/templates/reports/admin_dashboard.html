@@ -4,7 +4,8 @@
 {% block title %}Admin Console | Nyondo Hardware{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-8">
+<!-- Main workspace wrapper with a very soft slate-blue background to anchor the cards -->
+<div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-8 bg-slate-50/60 rounded-3xl mt-2">
 
     <!-- Header Workspace Identification Panel -->
     <div class="border-b border-slate-200 pb-5">
@@ -17,54 +18,45 @@
     <!-- Central Navigation Grid Matrix -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        <!-- Module Card 1: Supplier Liabilities -->
-        <a href="{% url 'unpaid_supplier' %}" class="bg-white border border-slate-200 hover:border-blue-500 hover:shadow-md rounded-2xl p-6 transition-all group flex flex-col justify-between space-y-4">
+        <!-- CARD 1: Supplier Credit -->
+        <a href="{% url 'unpaid_supplier' %}" class="bg-blue-50/30 border border-blue-100/60 hover:border-blue-400/60 hover:bg-blue-50/70 hover:shadow-md rounded-2xl p-6 transition-all group flex flex-col justify-between space-y-4 shadow-xs">
             <div class="space-y-3">
-                <div class="w-12 h-12 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
-                   
-                </div>
                 <div>
                     <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Track Supplier Credit</h3>
-                    <p class="text-xs text-slate-400 font-medium leading-relaxed mt-1">Audit pending balances, invoice timelines, and settlement statuses for manufacturing depot supply shipments.</p>
+                    <p class="text-xs text-slate-500 font-medium leading-relaxed mt-1">Audit pending balances, invoice timelines, and settlement statuses for manufacturing depot supply shipments.</p>
                 </div>
             </div>
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-black text-rose-600 uppercase tracking-wider">
+            <div class="pt-3 border-t border-blue-100/80 flex items-center justify-between text-[11px] font-black text-rose-600 uppercase tracking-wider">
                 <span>Debt: UGX {{ supplier_debt|default:"0"|intcomma }}</span>
-                <span class="group-hover:translate-x-1 transition-transform">Access Matrix &rarr;</span>
+                <span class="group-hover:translate-x-1 transition-transform text-blue-600 font-bold">Access Matrix &rarr;</span>
             </div>
         </a>
 
-        <!-- Module Card 2: Layby Deposit Schemes -->
-        <a href="{% url 'schemes_list' %}" class="bg-white border border-slate-200 hover:border-blue-500 hover:shadow-md rounded-2xl p-6 transition-all group flex flex-col justify-between space-y-4">
+        <!-- CARD 2: Scheme Deposits -->
+        <a href="{% url 'schemes_list' %}" class="bg-blue-50/30 border border-blue-100/60 hover:border-blue-400/60 hover:bg-blue-50/70 hover:shadow-md rounded-2xl p-6 transition-all group flex flex-col justify-between space-y-4 shadow-xs">
             <div class="space-y-3">
-                <div class="w-12 h-12 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
-                   
-                </div>
                 <div>
                     <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Manage Scheme Deposits</h3>
-                    <p class="text-xs text-slate-400 font-medium leading-relaxed mt-1">Oversee customer layer savings allocations, record secure down-payments, and authorize material release schedules.</p>
+                    <p class="text-xs text-slate-500 font-medium leading-relaxed mt-1">Oversee customer layer savings allocations, record secure down-payments, and authorize material release schedules.</p>
                 </div>
             </div>
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-black text-blue-600 uppercase tracking-wider">
+            <div class="pt-3 border-t border-blue-100/80 flex items-center justify-between text-[11px] font-black text-blue-600 uppercase tracking-wider">
                 <span>Held: UGX {{ scheme_collections_total|default:"0"|intcomma }}</span>
-                <span class="group-hover:translate-x-1 transition-transform">Manage Ledger &rarr;</span>
+                <span class="group-hover:translate-x-1 transition-transform text-blue-600 font-bold">Manage Ledger &rarr;</span>
             </div>
         </a>
 
-        <!-- Module Card 3: Deep Reporting Suite -->
-        <a href="{% url 'reports_index' %}" class="bg-slate-900 border border-slate-800 hover:border-blue-500 hover:shadow-md rounded-2xl p-6 transition-all group flex flex-col justify-between space-y-4 shadow-sm text-white">
+        <!-- CARD 3: Management Reports -->
+        <a href="{% url 'reports_index' %}" class="bg-blue-50/30 border border-blue-100/60 hover:border-blue-400/60 hover:bg-blue-50/70 hover:shadow-md rounded-2xl p-6 transition-all group flex flex-col justify-between space-y-4 shadow-xs">
             <div class="space-y-3">
-                <div class="w-12 h-12 bg-slate-800 text-amber-400 rounded-xl flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
-                   
-                </div>
                 <div>
-                    <h3 class="text-sm font-black text-amber-400 uppercase tracking-wider group-hover:text-blue-400 transition-colors">View Management Reports</h3>
-                    <p class="text-xs text-slate-400 font-medium leading-relaxed mt-1">Open the comprehensive auditing deck to evaluate structural profit margins, inventory trends, and cashier performance slips.</p>
+                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider group-hover:text-blue-600 transition-colors">View Management Reports</h3>
+                    <p class="text-xs text-slate-500 font-medium leading-relaxed mt-1">Open the comprehensive auditing deck to evaluate structural profit margins, inventory trends, and cashier performance slips.</p>
                 </div>
             </div>
-            <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] font-black text-emerald-400 uppercase tracking-wider">
+            <div class="pt-3 border-t border-blue-100/80 flex items-center justify-between text-[11px] font-black text-emerald-600 uppercase tracking-wider">
                 <span>Period Profit: UGX {{ estimated_profit|default:"0"|intcomma }}</span>
-                <span class="group-hover:translate-x-1 transition-transform">Open Directory &rarr;</span>
+                <span class="group-hover:translate-x-1 transition-transform text-blue-600 font-bold">Open &rarr;</span>
             </div>
         </a>
 
@@ -72,9 +64,8 @@
 
     <!-- Safety Threshold Notification Banner Area -->
     {% if low_stock_items.exists %}
-    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between text-xs text-amber-800 font-medium shadow-sm animate-pulse">
+    <div class="bg-amber-50/60 border border-amber-200/70 rounded-xl p-4 flex items-center justify-between text-xs text-amber-800 font-medium shadow-sm animate-pulse">
         <div class="flex items-center gap-2">
-            
             <span><strong>Attention Required:</strong> You currently have {{ low_stock_items.count }} inventory line item(s) resting below the critical reorder threshold safety level.</span>
         </div>
         <a href="{% url 'stock_history' %}" class="underline font-black text-amber-900 hover:text-amber-950 whitespace-nowrap ml-4">

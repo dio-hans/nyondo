@@ -6,6 +6,7 @@ class User(AbstractUser):
         ADMIN = 'ADMIN', 'Accounts/admin'
         SALES_ATTENDANT = 'SALES', 'Sales Attendant'
         STORE_MANAGER = 'MANAGER', 'Store Manager'
+        CASHIER = 'CASHIER', 'Cashier'
 
     role = models.CharField(
         max_length=10,
