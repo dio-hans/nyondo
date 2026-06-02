@@ -48,9 +48,9 @@
             </div>
         </div>
         <div class="mt-2">
-            {% if request.user.role == 'ADMIN' or request.user.is_superuser %}
+            {% if request.user.role == 'ADMIN' or request.user.role == 'SALES' %}
                 {% if scheme.current_balance > 0 %}
-                    <a href="{% url 'record_sale_with_scheme' scheme.id %}" class="w-full text-center block bg-blue-600 text-white px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-wider hover:bg-blue-700 transition-all shadow-sm">
+                    <a href="{% url 'record_sale' %}?scheme_id={{ scheme.id }}" class="w-full text-center block bg-blue-600 text-white px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-wider hover:bg-blue-700 transition-all shadow-sm">
                         Clear & Release Goods
                     </a>
                 {% endif %}
