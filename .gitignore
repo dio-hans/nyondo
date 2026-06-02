@@ -7,8 +7,11 @@ venv/
 .venv/
 
 # Ignore Python compiled cache files
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # Ignore environment variable files (passwords/secret keys)
 .env
