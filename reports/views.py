@@ -15,7 +15,8 @@ from django.contrib.auth import get_user_model
 from sales.models import SalesOrder, SalesOrderItem
 from procurement.models import PurchaseOrder
 from inventory.models import Product, StockMovement 
-from schemes.models import SchemeDeposit 
+from schemes.models import SavingsScheme
+
 
 User = get_user_model()
 
@@ -64,30 +65,57 @@ def apply_date_filters(request, sales_queryset, scheme_queryset=None):
 
 
 # CORE VIEWS AND SUB-REPORTS
+# 1. MAKE SURE SAVINGS SCHEME IS IMPORTED AT THE TOP of reports/views.py
+
 
 @login_required
 @user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
 def business_dashboard(request):
     """Polished Executive Control Panel providing unified financial telemetry and metrics."""
     completed_sales = SalesOrder.objects.filter(status='COMPLETED')
+    
+    # Existing calculations
     total_revenue = completed_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     total_transport = completed_sales.aggregate(total=Sum('transport_fee'))['total'] or Decimal('0.00')
     
     products = Product.objects.all()
     stock_valuation = sum(p.current_stock * p.selling_price for p in products)
     
-    low_stock_count = Product.objects.filter(current_stock__lte=10).count()
+    # FIX 1: Fetch items for lower safety threshold warning banner
+    low_stock_items = Product.objects.filter(current_stock__lte=F('reorder_level'))
+    low_stock_count = low_stock_items.count()
     total_staff = User.objects.count()
     
     recent_orders = SalesOrder.objects.all().select_related('customer').order_by('-order_date')[:5]
 
+    # FIX 2: Compute Live Supplier Credit Owed (Debt Card)
+    supplier_debt = PurchaseOrder.objects.filter(balance__gt=0).aggregate(total=Sum('balance'))['total'] or Decimal('0.00')
+
+    # FIX 3: Compute Customer Savings Balance (Held Card)
+    scheme_collections_total = SavingsScheme.objects.aggregate(total=Sum('current_balance'))['total'] or Decimal('0.00')
+
+    # FIX 4: Compute Period Net Profit (Estimated Profit Card)
+    sale_items = SalesOrderItem.objects.filter(sales_order__in=completed_sales)
+    cogs_expression = ExpressionWrapper(
+        F('product__cost_price') * F('quantity'),
+        output_field=DecimalField()
+    )
+    cogs = sale_items.aggregate(total=Sum(cogs_expression))['total'] or Decimal('0.00')
+    gross_profit = total_revenue - cogs
+    estimated_profit = gross_profit + total_transport
+
+    # Pass all variables directly to match your template keys perfectly
     context = {
         'total_revenue': total_revenue,
         'stock_valuation': stock_valuation,
         'low_stock_count': low_stock_count,
+        'low_stock_items': low_stock_items,  # Added to make the warning banner active!
         'total_staff': total_staff,
         'recent_orders': recent_orders,
         'total_transport': total_transport,
+        'supplier_debt': supplier_debt,                       # Match Card 1
+        'scheme_collections_total': scheme_collections_total, # Match Card 2
+        'estimated_profit': estimated_profit,                 # Match Card 3
     }
     return render(request, 'reports/admin_dashboard.html', context)
 
@@ -128,7 +156,12 @@ def financial_statement_view(request):
 @login_required
 @user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
 def unpaid_supplier_view(request):
-    unpaid_supplier_orders = PurchaseOrder.objects.filter(balance__gt=0).select_related('supplier').order_by('-balance')
+    # FIXED: Using 'purchaseitem_set' to prefetch child rows and their respective products
+    unpaid_supplier_orders = PurchaseOrder.objects.filter(balance__gt=0)\
+        .select_related('supplier')\
+        .prefetch_related('purchaseitem_set__product')\
+        .order_by('-balance')
+        
     supplier_debt = unpaid_supplier_orders.aggregate(total=Sum('balance'))['total'] or 0
 
     context = {

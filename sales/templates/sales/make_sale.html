@@ -8,88 +8,220 @@
 
     <!-- Left Side: Product Selector Matrix Panel -->
     <div class="lg:col-span-2 flex flex-col h-full space-y-4">
+
+        <!-- TOP NAVIGATION UTILITY BAR -->
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between shadow-sm flex-wrap gap-2">
+            <span class="text-xs font-black text-blue-900 uppercase tracking-wider flex items-center gap-2">
+                > Sales Workspace Shortcuts:
+            </span>
+            <div class="flex gap-2">
+                <a href="{% url 'schemes_list' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-black px-4 py-2 rounded-lg text-[11px] uppercase tracking-wider shadow-xs flex items-center gap-1.5 transition-all">
+                     Credit Schemes
+                </a>
+                <a href="{% url 'supplier_debt_list' %}" class="bg-amber-500 hover:bg-amber-600 text-white font-black px-4 py-2 rounded-lg text-[11px] uppercase tracking-wider shadow-xs flex items-center gap-1.5 transition-all">
+                     Supplier Credits
+                </a>
+            </div>
+        </div>
+
+        {% if active_scheme %}
+        <div class="bg-blue-600 text-white rounded-xl p-4 flex items-center justify-between shadow-sm border border-blue-700 animate-in fade-in slide-in-from-top-4 duration-200">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-700 p-2.5 rounded-lg border border-blue-500/30">
+                    <i class="fa-solid fa-piggy-bank text-sm"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-black uppercase tracking-wider">Active Savings Scheme Clearance Workspace</h4>
+                    <p class="text-[11px] text-blue-100 font-medium mt-0.5">Clearing accumulated balances for <span class="underline font-bold">{{ active_scheme.customer.name }}</span>.</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-[10px] uppercase font-black text-blue-200 block tracking-wider">Amassed Savings Pool</span>
+                <span class="font-mono text-sm font-black text-white bg-blue-700/80 border border-blue-500/40 px-3 py-1 rounded-lg mt-1 inline-block">UGX {{ active_scheme.current_balance|default:"0"|intcomma }}</span>
+            </div>
+        </div>
+        {% endif %}
         
         <!-- Search Filtering Registry Row -->
         <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between shadow-sm">
             <div class="w-full sm:w-1/2">
-                <label for="pos-customer-select" class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Active Customer Link</label>
-                <select id="pos-customer-select" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all">
-                    {% for customer in customers %}
-                        <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.get_customer_type_display }})</option>
-                    {% endfor %}
+                <!--Active Token Assignment Selector Interface -->
+                <label for="pos-customer-select" id="pos-selector-label" class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Active Token Assignment</label>
+                 <select id="pos-customer-select" onchange="updateTableBadge()" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-blue-600/5 focus:border-blue-600 transition-all font-mono">
+                    <option value="-1">Token #01</option>
+                    <option value="-2">Token #02</option>
+                    <option value="-3">Token #03</option>
+                    <option value="-4">Token #04</option>
+                    <option value="-5">Token #05</option>
+                    <option value="-6">Token #06</option>
+                    <option value="-7">Token #07</option>
+                    <option value="-8">Token #08</option>
+                    <option value="-9">Token #09</option>
+                    <option value="-10">Token #10</option>
+                    <option value="-11">Token #11</option>
+                    <option value="-12">Token #12</option>
+                    <option value="-13">Token #13</option>
+                    <option value="-14">Token #14</option>
+                    <option value="-15">Token #15</option>
+                    <option value="-16">Token #16</option>
+                    <option value="-17">Token #17</option>
+                    <option value="-18">Token #18</option>
+                    <option value="-19">Token #19</option>
+                    <option value="-20">Token #20</option>
+                    <option value="-21">Token #21</option>
+                    <option value="-22">Token #22</option>
+                    <option value="-23">Token #23</option>
+                    <option value="-24">Token #24</option>
+                    <option value="-25">Token #25</option>
+                    <option value="-26">Token #26</option>
+                    <option value="-27">Token #27</option>
+                    <option value="-28">Token #28</option>
+                    <option value="-29">Token #29</option>
+                    <option value="-30">Token #30</option>
+                    <option value="-31">Token #31</option>
+                    <option value="-32">Token #32</option>
+                    <option value="-33">Token #33</option>
+                    <option value="-34">Token #34</option>
+                    <option value="-35">Token #35</option>
+                    <option value="-36">Token #36</option>
+                    <option value="-37">Token #37</option>
+                    <option value="-38">Token #38</option>
+                    <option value="-39">Token #39</option>
+                    <option value="-40">Token #40</option>
+                    <option value="-41">Token #41</option>
+                    <option value="-42">Token #42</option>
+                    <option value="-43">Token #43</option>
+                    <option value="-44">Token #44</option>
+                    <option value="-45">Token #45</option>
+                    <option value="-46">Token #46</option>
+                    <option value="-47">Token #47</option>
+                    <option value="-48">Token #48</option>
+                    <option value="-49">Token #49</option>
+                    <option value="-50">Token #50</option>
                 </select>
             </div>
             <div class="w-full sm:w-1/2">
                 <label for="product-search" class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Stock Registry Search</label>
-                <input type="text" id="product-search" onkeyup="filterSearch()" placeholder="Start typing to search stock items..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all placeholder-slate-400">
+                <input type="text" id="product-search" onkeyup="filterSearch()" placeholder="Start typing to search stock items..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-blue-600/5 focus:border-blue-600 transition-all placeholder-slate-400">
             </div>
         </div>
 
-        <!-- Dynamic Product Inventory Spool Grid -->
+        <!-- Dynamic Product Inventory Spool Grid (UPDATED TO BLUE PANELS) -->
         <div class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 pr-2 pb-4" id="hardware-grid">
             {% for product in products %}
-                <div class="product-card bg-slate-900 hover:bg-slate-800 text-white rounded-xl p-4 flex flex-col justify-between cursor-pointer transition-all border border-slate-800 relative overflow-hidden active:scale-95 group shadow-sm" 
+                <div class="product-card bg-sky-950 hover:bg-sky-900 text-white rounded-xl p-4 flex flex-col justify-between cursor-pointer transition-all border border-sky-900 relative overflow-hidden active:scale-95 group shadow-sm" 
                      data-id="{{ product.id }}" 
                      data-name="{{ product.name }}" 
                      data-price="{{ product.selling_price }}" 
                      data-stock="{{ product.current_stock }}"
                      onclick="openQtyModal(this)">
                     
-                    <div class="absolute top-2 right-2 text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-black font-mono border border-slate-700/40">
+                    <div class="absolute top-2 right-2 text-[9px] bg-sky-900 text-sky-200 px-1.5 py-0.5 rounded font-black font-mono border border-sky-800/40">
                         STK: {{ product.current_stock }}
                     </div>
                     
-                    <h4 class="text-xs font-black uppercase tracking-tight mt-4 text-slate-100 leading-snug product-title-name group-hover:text-blue-400 transition-colors">
+                    <h4 class="text-xs font-black uppercase tracking-tight mt-4 text-sky-50 leading-snug product-title-name group-hover:text-sky-300 transition-colors">
                         {{ product.name }}
                     </h4>
                     
-                    <div class="text-right mt-4 border-t border-slate-800 pt-2">
+                    <div class="text-right mt-4 border-t border-sky-900 pt-2">
                         <span class="text-xs font-mono font-black text-emerald-400">UGX {{ product.selling_price|default:"0"|intcomma }}</span>
                     </div>
                 </div>
             {% empty %}
                 <div class="col-span-full bg-white border border-dashed border-slate-200 rounded-xl p-12 text-center text-xs text-slate-400 font-bold uppercase tracking-wider">
-                 
                     No hardware materials matching minimum stock rules available.
                 </div>
             {% endfor %}
         </div>
     </div>
 
-    <!-- Right Side: Running Statement Cart Sidebar Checkout Box -->
-    <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 flex flex-col h-full justify-between">
-        <div class="space-y-4">
-            <div class="border-b border-slate-200 pb-3 flex justify-between items-center">
-                <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                  Active Invoice
-                </h3>
-                <span class="bg-blue-50 text-blue-700 text-[10px] px-2.5 py-1 rounded-md font-black font-mono border border-blue-100" id="cart-counter">0 Items</span>
-            </div>
-            
-            <!-- Items Scroll Hook Hookpoint -->
-            <div id="cart-items-hook" class="divide-y divide-slate-100 overflow-y-auto max-h-[calc(100vh-340px)] pr-1">
-                <div id="empty-cart-notice" class="text-center text-slate-400 text-xs font-bold py-16 uppercase tracking-wide space-y-2">
-                    
-                    <p class="italic font-medium text-[11px] text-slate-400 normal-case">Cart empty. Tap available materials cards to load values.</p>
+    <!-- Right Side: Running Statement Cart Sidebar & Walk-In Clearance -->
+    <div class="flex flex-col h-full space-y-4">
+        
+        <!-- Active Invoice Container Box -->
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 flex flex-col flex-1 justify-between overflow-hidden">
+            <div class="space-y-4 flex flex-col flex-1 overflow-hidden">
+                <div class="border-b border-slate-200 pb-3 flex justify-between items-center shrink-0">
+                    <div class="flex flex-col">
+                        <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                          Active Invoice
+                        </h3>
+                        <span id="active-station-badge" class="text-[10px] font-mono font-black text-blue-600 uppercase tracking-wider mt-0.5 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">Assigned: Token 01</span>
+                    </div>
+                    <span class="bg-blue-50 text-blue-700 text-[10px] px-2.5 py-1 rounded-md font-black font-mono border border-blue-100" id="cart-counter">0 Items</span>
                 </div>
+                
+                <!-- Items Scroll Hook -->
+                <div id="cart-items-hook" class="divide-y divide-slate-100 overflow-y-auto flex-1 pr-1">
+                    <div id="empty-cart-notice" class="text-center text-slate-400 text-xs font-bold py-16 uppercase tracking-wide space-y-2">
+                        <p class="italic font-medium text-[11px] text-slate-400 normal-case">Cart empty. Tap available materials cards to load values.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Subtotal Pricing Footer Actions -->
+            <div class="border-t border-slate-200 pt-4 mt-2 space-y-3 shrink-0">
+                <div class="flex justify-between items-center font-black text-slate-900 text-xs uppercase tracking-wider px-1">
+                    <span class="text-slate-400">Estimated Subtotal:</span>
+                    <span id="cart-subtotal-display" class="font-mono text-sm text-blue-600 bg-slate-50 border border-slate-200/60 px-3 py-1.5 rounded-lg">UGX 0</span>
+                </div>
+                
+                <form id="checkout-passthrough-form" method="POST" action="{% url 'review_checkout' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="scheme_id" value="{{ active_scheme.id|default:'' }}">
+                    <input type="hidden" name="customer" id="passthrough-customer-id">
+                    <input type="hidden" name="cart_json" id="passthrough-cart-json">
+                    <button type="button" onclick="submitPOSCart()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                        Add To Cart & Continue
+                    </button>
+                </form>
             </div>
         </div>
 
-        <!-- Order Subtotal Pricing & Final Validation Actions Footer -->
-        <div class="border-t border-slate-200 pt-4 space-y-3">
-            <div class="flex justify-between items-center font-black text-slate-900 text-xs uppercase tracking-wider px-1">
-                <span class="text-slate-400">Estimated Subtotal:</span>
-                <span id="cart-subtotal-display" class="font-mono text-sm text-blue-600 bg-slate-50 border border-slate-200/60 px-3 py-1.5 rounded-lg">UGX 0</span>
+        <!-- NEW BOTTOM PANEL: PENDING WALK-INS TO CLEAR -->
+        <div class="bg-white border border-rose-200 rounded-xl shadow-sm p-4 h-[240px] flex flex-col overflow-hidden">
+            <div class="border-b border-rose-100 pb-2 mb-2 shrink-0 flex items-center gap-2 text-rose-700">
+                <i class="fa-solid fa-circle-exclamation text-xs"></i>
+                <h3 class="text-xs font-black uppercase tracking-wider">Pending Walk-ins to Clear</h3>
             </div>
             
-            <form id="checkout-passthrough-form" method="POST" action="{% url 'review_checkout' %}">
-                {% csrf_token %}
-                <input type="hidden" name="customer" id="passthrough-customer-id">
-                <input type="hidden" name="cart_json" id="passthrough-cart-json">
-                <button type="button" onclick="submitPOSCart()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
-                    Add To Cart & Continue
-                </button>
-            </form>
+            <div class="flex-1 overflow-y-auto pr-1">
+                <table class="w-full text-left text-[11px] border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-100 text-slate-400 font-black uppercase tracking-wider">
+                            <th class="py-1.5">ID</th>
+                            <th class="py-1.5">Time</th>
+                            <th class="py-1.5">Total</th>
+                            <th class="py-1.5 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50 font-medium text-slate-700">
+                        {% for order in pending_walkins %}
+                        <tr>
+                            <td class="py-2 font-bold text-slate-900 font-mono">SO-{{ order.id }}</td>
+                            <td class="py-2">{{ order.order_date|date:"H:i" }}</td>
+                            <td class="py-2 font-mono text-slate-900">UGX {{ order.total_amount|intcomma }}</td>
+                            <td class="py-2 text-right">
+                                <!-- Swap action to your clearing processing endpoint -->
+                                <form action="{% url 'clear_walkin_order' order.id %}" method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-2 py-1 rounded text-[10px] uppercase tracking-wide transition-colors cursor-pointer shadow-2xs">
+                                        Clear
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-8 text-slate-400 font-bold uppercase tracking-wide">
+                                No pending walk-ins to clear.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -121,6 +253,14 @@
 <script>
     let currentCart = {}; 
     let selectedActiveProduct = null;
+
+    function updateTableBadge() {
+        const selector = document.getElementById('pos-customer-select');
+        const badge = document.getElementById('active-station-badge');
+        if (selector && badge) {
+            badge.innerText = `Assigned: ${selector.value}`;
+        }
+    }
 
     function filterSearch() {
         let input = document.getElementById('product-search').value.toLowerCase();
@@ -223,7 +363,7 @@
         const keys = Object.keys(currentCart);
         
         if (!customerSelect.value) {
-            alert("Please bind an active customer profile to continue.");
+            alert("Please assign a valid destination token layout node.");
             return;
         }
         if (keys.length === 0) {
@@ -237,5 +377,30 @@
         document.getElementById('passthrough-cart-json').value = JSON.stringify(flatData);
         document.getElementById('checkout-passthrough-form').submit();
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        {% if active_scheme %}
+        const label = document.getElementById('pos-selector-label');
+        const customerSelect = document.getElementById('pos-customer-select');
+        const badge = document.getElementById('active-station-badge');
+        
+        if (label) {
+            label.innerText = "Locked Scheme Customer Link";
+        }
+        
+        if (customerSelect) {
+            customerSelect.innerHTML = `<option value="{{ active_scheme.customer.id }}" selected>{{ active_scheme.customer.name }}</option>`;
+            customerSelect.style.pointerEvents = "none";
+            customerSelect.classList.remove('font-mono');
+            customerSelect.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200');
+        }
+
+        if (badge) {
+            badge.innerText = "Target Account: {{ active_scheme.customer.name }}";
+            badge.classList.remove('text-blue-600', 'bg-blue-50', 'border-blue-100');
+            badge.classList.add('text-emerald-700', 'bg-emerald-50', 'border-emerald-100');
+        }
+        {% endif %}
+    });
 </script>
 {% endblock %}

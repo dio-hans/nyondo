@@ -1,1 +1,104 @@
 {% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Ledger Audit: {{ scheme.customer.name }} | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <a href="{% url 'schemes_list' %}" class="inline-flex items-center text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-wider">
+        ← Back to Registry
+    </a>
+    <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">
+        Account ID: #{{ scheme.id }}
+    </span>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 text-xs">
+        <span class="font-black text-[10px] text-slate-400 uppercase tracking-wider block mb-2">Account Holder</span>
+        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ scheme.customer.name }}</h3>
+        <div class="mt-3 space-y-1.5 font-medium text-slate-600">
+            <p><span class="text-slate-400">Phone:</span> <span class="font-mono">{{ scheme.phone_number }}</span></p>
+            <p><span class="text-slate-400">NIN:</span> <span class="font-mono tracking-wide uppercase">{{ scheme.nin }}</span></p>
+        </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 text-xs">
+        <span class="font-black text-[10px] text-slate-400 uppercase tracking-wider block mb-2">Commitment Strategy</span>
+        <div class="flex items-center gap-2 mt-1">
+            <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded text-[9px] font-black uppercase tracking-wider">
+                {{ scheme.frequency_commitment }}
+            </span>
+            {% if scheme.is_price_locked %}
+                <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 rounded text-[9px] font-black uppercase tracking-wider">
+                    Price Locked
+                </span>
+            {% endif %}
+        </div>
+        <div class="mt-3 space-y-1.5 font-medium text-slate-600">
+            <p><span class="text-slate-400">Target Ceiling:</span> <span class="font-mono font-bold text-slate-800">UGX {{ scheme.total_amount_target|default:"0"|intcomma }}</span></p>
+        </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 text-xs flex flex-col justify-between">
+        <div>
+            <span class="font-black text-[10px] text-slate-400 uppercase tracking-wider block mb-1">Accumulated Balance</span>
+            <div class="text-xl font-black text-emerald-700 font-mono tracking-tight">
+                UGX {{ scheme.current_balance|default:"0"|intcomma }}
+            </div>
+        </div>
+        <div class="mt-2">
+            {% if request.user.role == 'ADMIN' or request.user.role == 'SALES' %}
+                {% if scheme.current_balance > 0 %}
+                    <a href="{% url 'record_sale' %}?scheme_id={{ scheme.id }}" class="w-full text-center block bg-blue-600 text-white px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-wider hover:bg-blue-700 transition-all shadow-sm">
+                        Clear & Release Goods
+                    </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
+    <div class="p-4 bg-slate-50 border-b border-slate-200">
+        <h4 class="font-black text-[10px] text-slate-400 uppercase tracking-wider">Historical Account Cash Flow Deposits</h4>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50/50 border-b border-slate-200 text-[10px] font-bold uppercase text-slate-500">
+                    <th class="p-4 pl-6">Transaction Date</th>
+                    <th class="p-4">Reference No.</th>
+                    <th class="p-4 text-right">Amount Inward</th>
+                    <th class="p-4 text-center pr-6">Logged By</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                {% for deposit in scheme.deposits.all %}
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="p-4 pl-6 font-mono text-slate-500">
+                        {{ deposit.date_created|date:"Y-m-d H:i"|default:deposit.timestamp }}
+                    </td>
+                    <td class="p-4 font-mono font-bold text-slate-900 uppercase">
+                        {{ deposit.receipt_no|default:deposit.id }}
+                    </td>
+                    <td class="p-4 text-right font-black text-emerald-600 font-mono">
+                        + UGX {{ deposit.amount|intcomma }}
+                    </td>
+                    <td class="p-4 text-center pr-6 text-slate-400 font-mono text-[11px]">
+                        {{ deposit.served_by.username|default:"System" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-8 text-slate-400 font-bold uppercase bg-slate-50/10 tracking-wide">
+                        No financial transactions or deposits recorded on this ledger yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

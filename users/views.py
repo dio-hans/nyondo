@@ -17,11 +17,14 @@ def redirect_user_by_role(user):
     if user.role == 'ADMIN':
         return redirect('admin_dashboard')
         
-    elif user.role == 'STORE_MANAGER':
+    elif user.role == 'MANAGER':
         return redirect('inventory_dashboard')
         
     elif user.role == 'SALES':
         return redirect('record_sale')
+    
+    elif user.role == 'CASHIER':
+        return redirect('order_queue')
         
     else:
         # Fallback security route if something is weird

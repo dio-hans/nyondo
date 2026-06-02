@@ -4,107 +4,140 @@
 {% block title %}Savings Schemes Ledger Registry | Nyondo Hardware{% endblock %}
 
 {% block content %}
-<!-- Master Registration Control Dashboard Header Panel -->
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-        <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">
-            <i class="fa-solid fa-piggy-bank text-indigo-600 mr-1"></i> Customer Savings Schemes Registry
-        </h2>
-        <p class="text-xs text-slate-400 font-medium mt-0.5">Active repository of layaway accounts, dynamic material allocations, and customer ledger statuses.</p>
-    </div>
-    <div>
-        {% if perms.schemes.add_scheme %}
-            <a href="{% url 'schemes:enroll_customer' %}" class="inline-block bg-slate-900 text-white px-4 py-2.5 rounded-md text-[11px] font-black uppercase tracking-wider hover:bg-slate-800 transition-all shadow-sm">
-                <i class="fa-solid fa-user-plus mr-1"></i> Enroll New Customer
-            </a>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Registry Data Array Table Interface -->
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
-    <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-        <span class="font-black text-[10px] text-slate-400 uppercase tracking-wider">Monitored Ledger Rows</span>
-        <span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-bold text-[10px]">{{ schemes|length }} Active Accounts</span>
+<div class="max-w-6xl mx-auto my-8 px-4 space-y-6">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-sm font-black text-slate-900 uppercase tracking-wider">
+                 Customer Savings Schemes Registry
+            </h1>
+            <p class="text-xs text-slate-400 font-medium mt-0.5">Active repository of layaway accounts, dynamic material allocations, and customer ledger statuses.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if request.user.role == 'ADMIN' or request.user.role == 'SALES' %}
+                <a href="{% url 'enroll_customer' %}" class="inline-block bg-blue-600 text-white px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-blue-700 transition-all shadow-sm">
+                     Enroll New Schemer
+                </a>
+            {% elif perms.schemes.add_scheme %}
+                <a href="{% url 'enroll_customer' %}" class="inline-block bg-slate-950 text-white px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-slate-900 transition-all shadow-sm">
+                     Enroll New Customer
+                </a>
+            {% endif %}
+        </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-slate-50/50 border-b border-slate-200 text-[10px] font-bold uppercase text-slate-500">
-                    <th class="p-4 pl-6">Customer Details</th>
-                    <th class="p-4">NIN Identification</th>
-                    <th class="p-4 text-center">Commitment Interval</th>
-                    <th class="p-4 text-right">Target Amount</th>
-                    <th class="p-4 text-right">Current Balance</th>
-                    <th class="p-4 text-center pr-6">System Management</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-                {% for scheme in schemes %}
-                <tr class="hover:bg-slate-50/50 transition-colors">
-                    <!-- Customer Context Frame -->
-                    <td class="p-4 pl-6">
-                        <span class="font-black text-slate-900 uppercase block">{{ scheme.customer.name }}</span>
-                        <span class="text-[10px] text-slate-400 mt-0.5 block font-mono">{{ scheme.phone_number }}</span>
-                    </td>
-                    
-                    <!-- Core ID Fields -->
-                    <td class="p-4 font-mono text-slate-500 tracking-wider">
-                        {{ scheme.nin }}
-                    </td>
-                    
-                    <!-- Dynamic Badging Frequency -->
-                    <td class="p-4 text-center">
-                        <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded text-[9px] font-black uppercase tracking-wider">
-                            {{ scheme.frequency_commitment }}
-                        </span>
-                    </td>
-                    
-                    <!-- Financial Accounting Fields -->
-                    <td class="p-4 text-right font-bold text-slate-500 font-mono">
-                        UGX {{ scheme.total_amount_target|default:"0"|intcomma }}
-                    </td>
-                    
-                    <td class="p-4 text-right">
-                        <span class="font-black text-emerald-700 text-xs font-mono">
-                            UGX {{ scheme.current_balance|default:"0"|intcomma }}
-                        </span>
-                        {% if scheme.is_price_locked %}
-                            <span class="block text-[8px] font-black text-amber-600 uppercase tracking-tight mt-0.5">🔒 Price Locked Secure</span>
-                        {% endif %}
-                    </td>
-                    
-                    <!-- Protected Execution Gateways Component -->
-                    <td class="p-4 text-center pr-6 space-y-1 sm:space-y-0 sm:space-x-1.5 whitespace-nowrap">
-                        {% if perms.schemes.add_deposit %}
-                            <a href="{% url 'schemes:make_deposit' %}?scheme_id={{ scheme.id }}" class="inline-flex items-center bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded text-[10px] font-bold uppercase hover:bg-emerald-100 transition-colors">
-                                <i class="fa-solid fa-plus-minus mr-1"></i> Add Cash
-                            </a>
-                        {% endif %}
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/60 text-xs">
+        <div class="flex items-center gap-2">
+            <span class="font-black text-[10px] text-slate-400 uppercase tracking-wider">Monitored Ledger Rows</span>
+            <span class="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-md font-black text-[10px]">{{ schemes|length }} Active Accounts</span>
+        </div>
+        
+        <div class="w-full sm:w-72 relative">
+            <input type="text" id="scheme-search-input" onkeyup="filterSchemesRegistry()" placeholder="Search customer name or phone..." class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all placeholder-slate-400 shadow-xs">
+        </div>
+    </div>
 
-                        {% if perms.schemes.view_scheme %}
-                            <a href="{% url 'schemes:customer_detail' scheme.id %}" class="inline-flex items-center bg-slate-900 text-white px-2.5 py-1 rounded text-[10px] font-bold uppercase hover:bg-slate-800 transition-all shadow-sm">
-                                <i class="fa-solid fa-folder-open mr-1"></i> Audit Ledger
-                            </a>
-                        {% else %}
-                            <span class="inline-flex items-center text-[9px] font-semibold text-slate-300 italic">
-                                <i class="fa-solid fa-lock text-[8px] mr-0.5"></i> Restricted
+    <div class="bg-white border border-blue-100/60 rounded-xl shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-950 text-white uppercase text-[10px] tracking-wider font-black">
+                        <th class="p-4 pl-6 border-x border-slate-800">Customer Details</th>
+                        <th class="p-4 border-x border-slate-800">NIN Identification</th>
+                        <th class="p-4 text-center border-x border-slate-800">Commitment Interval</th>
+                        <th class="p-4 text-right border-x border-slate-800">Target Amount</th>
+                        <th class="p-4 text-right border-x border-slate-800">Current Balance</th>
+                        <th class="p-4 text-center pr-6 border-x border-slate-800">System Management</th>
+                    </tr>
+                </thead>
+                <tbody id="schemes-table-body" class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for scheme in schemes %}
+                    <tr class="scheme-row hover:bg-blue-50/20 transition-colors">
+                        
+                        <td class="p-4 pl-6 border-x border-slate-100">
+                            <span class="font-black text-slate-900 uppercase block search-target">{{ scheme.customer.name }}</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5 block font-mono font-medium">{{ scheme.phone_number }}</span>
+                        </td>
+                        
+                        <td class="p-4 font-mono text-slate-500 tracking-wider font-bold border-x border-slate-100">
+                            {{ scheme.nin|default:"—" }}
+                        </td>
+                        
+                        <td class="p-4 text-center whitespace-nowrap border-x border-slate-100">
+                            <span class="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full text-[10px] font-black uppercase tracking-wide inline-block">
+                                {{ scheme.frequency_commitment }}
                             </span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <!-- Empty System Operational State -->
-                <tr>
-                    <td colspan="6" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-slate-50/20">
-                        <i class="fa-solid fa-folder-open text-slate-300 text-xl block mb-2"></i>
-                        No active scheme savings records found in runtime tables.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </td>
+                        
+                        <td class="p-4 text-right font-mono font-bold whitespace-nowrap text-xs text-slate-500 border-x border-slate-100">
+                            UGX {{ scheme.total_amount_target|default:"0"|intcomma }}
+                        </td>
+                        
+                        <td class="p-4 text-right whitespace-nowrap border-x border-slate-100">
+                            <span class="font-mono font-bold text-emerald-600 text-xs block">
+                                UGX {{ scheme.current_balance|default:"0"|intcomma }}
+                            </span>
+                            {% if scheme.is_price_locked %}
+                                <span class="block text-[8px] font-black text-amber-600 uppercase tracking-tight mt-0.5">🔒 Price Locked Secure</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="p-4 text-center pr-6 space-y-1 sm:space-y-0 sm:space-x-1.5 whitespace-nowrap border-x border-slate-100">
+                            {% if request.user.role == 'ADMIN' or request.user.role == 'SALES' %}
+                                <a href="{% url 'record_deposit' customer_id=scheme.id %}" class="inline-flex items-center bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded text-[10px] font-black uppercase hover:bg-emerald-100 transition-colors">
+                                     Add Cash
+                                </a>
+                            {% endif %}
+                            
+                            {% if request.user.role == 'ADMIN' or request.user.role == 'SALES' %}
+                                {% if scheme.current_balance > 0 %}
+                                    <a href="{% url 'record_sale' %}?scheme_id={{ scheme.id }}" class="inline-flex items-center bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded text-[10px] font-black uppercase hover:bg-blue-100 transition-colors">
+                                         Clear Goods
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+
+                            {% if request.user.role == 'ADMIN' or request.user.is_superuser %}
+                                <a href="{% url 'customer_detail' scheme.id %}" class="inline-flex items-center bg-slate-950 text-white px-2.5 py-1 rounded text-[10px] font-black uppercase hover:bg-slate-900 transition-all shadow-xs">
+                                    Audit Ledger
+                                </a>
+                            {% else %}
+                                <span class="inline-flex items-center text-[9px] font-bold text-slate-300 uppercase tracking-wider italic">
+                                     Restricted
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-12 text-center text-slate-400 font-bold uppercase tracking-wide bg-blue-50/10 border-x border-slate-100">
+                            No active scheme savings records found in runtime tables.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<script>
+    function filterSchemesRegistry() {
+        const searchInput = document.getElementById('scheme-search-input').value.toLowerCase().trim();
+        const dataRows = document.getElementsByClassName('scheme-row');
+        
+        for (let i = 0; i < dataRows.length; i++) {
+            const targetSpan = dataRows[i].querySelector('.search-target');
+            if (targetSpan) {
+                const lookupText = targetSpan.textContent.toLowerCase();
+                
+                if (lookupText.includes(searchInput)) {
+                    dataRows[i].style.display = "";
+                } else {
+                    dataRows[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>
 {% endblock %}

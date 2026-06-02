@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load humanize %}
+
 {% block title %}Inventory Executive Terminal | Nyondo Hardware{% endblock %}
 
 {% block content %}
@@ -63,25 +65,17 @@
     </div>
     {% endif %}
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Capital Asset Investment</span>
-            <span class="text-lg font-black text-slate-900 mt-1 block">UGX {{ total_stock_value|default:"0" }}</span>
-        </div>
-        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Expected Margin Yield</span>
-            <span class="text-lg font-black text-emerald-600 mt-1 block">UGX {{ expected_profit|default:"0" }}</span>
-        </div>
-        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Active Monitored SKUs</span>
-            <span class="text-lg font-black text-slate-900 mt-1 block">{{ total_products }}</span>
-        </div>
-        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Depleted Reorder Hazards</span>
-            <span class="text-lg font-black {% if low_stock_products.count > 0 %}text-rose-600{% else %}text-slate-900{% endif %} mt-1 block">
-                {{ low_stock_products.count }} Items
-            </span>
-        </div>
+   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Capital Asset Investment</span>
+        <span class="text-lg font-black text-slate-900 mt-1 block">UGX {{ stock_valuation|default:0|intcomma }}</span>
+    </div>
+    
+    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Expected Margin Yield</span>
+        <span class="text-lg font-black text-emerald-600 mt-1 block">UGX {{ estimated_profit|default:0|intcomma }}</span>
+    </div>
+    
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

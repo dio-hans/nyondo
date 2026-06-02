@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 
 @login_required
 def product_list(request):
-    products = Product.objects.all().order_by('name')
+    products = Product.objects.all().order_by('current_stock')
     context = {'products': products}
     return render(request, 'product_list.html', context)
 
@@ -44,7 +44,7 @@ def inventory_dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
-
+@login_required
 def product_save(request, product_id=None):
     """
     Enables store managers to correct historical manual entry mistakes,
@@ -104,7 +104,7 @@ def product_save(request, product_id=None):
     }
     return render(request, 'inventory/product_form.html', context)
 
-
+@login_required
 def product_create(request):
     """
     Unified Inbound Flow: Handles standard cash restocks, brand new inventory registrations, 
@@ -240,7 +240,7 @@ def product_create(request):
     return render(request, 'product_form.html', context)
 
 
-
+@login_required
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     stock_movements = StockMovement.objects.filter(product=product).order_by('-created_at')
@@ -260,7 +260,7 @@ def product_detail(request, product_id):
     }
     return render(request, 'inventory/product_detail.html', context)
 
-
+@login_required
 def stock_movement_history(request):
     """
     Renders a master audit trail of all warehouse item fluctuations
@@ -274,7 +274,7 @@ def stock_movement_history(request):
     return render(request, 'stock_movement.html', context)
 
 # inventory/views.py
-
+@login_required
 def supplier_create(request):
 
     if request.method == "POST":
@@ -293,4 +293,3 @@ def supplier_create(request):
 
     return render(request, 'supplier_form.html')
 
-# In your procurement/views.py

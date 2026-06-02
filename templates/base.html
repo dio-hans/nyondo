@@ -7,16 +7,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-50 font-sans text-slate-900 antialiased min-h-screen flex flex-col">
+<body class="bg-slate-100/70 font-sans text-slate-900 antialiased min-h-screen flex flex-col">
 
     {% block header %}
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <header class="bg-blue-50/20 backdrop-blur-md border-b border-blue-100/80 sticky top-0 z-50 shadow-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
             
-            <a href="{% if request.user.role == 'ADMIN' or request.user.is_superuser %}{% url 'procurement_dashboard' %}{% else %}{% url 'inventory_dashboard' %}{% endif %}" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
-                <div class="h-9 w-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm border border-blue-500">
-                    <i class="fa-solid fa-screwdriver-wrench text-white text-base"></i>
+            <a href="{% if request.user.role == 'ADMIN'%}{% url 'admin_dashboard' %}{% elif request.user.role == 'MANAGER' %}{% url 'inventory_dashboard' %}{% endif %}" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
+                <!-- LOGO ICON FIX: Re-instated the Spanner and Screwdriver icon cluster framework -->
+                <div class="h-9 w-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-xs border border-blue-500 text-white relative">
+                    <i class="fa-solid fa-wrench text-xs absolute transform -translate-x-1 -translate-y-0.5 -rotate-45"></i>
+                    <i class="fa-solid fa-screwdriver text-xs absolute transform translate-x-1 translate-y-0.5 -rotate-45"></i>
                 </div>
                 <div>
                     <span class="text-slate-900 font-black text-lg tracking-wider block leading-none">NYONDO</span>
@@ -31,12 +33,11 @@
                         {{ request.user.get_role_display }}
                     </span>
                 </div>
-                <div class="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                <div class="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
                     {{ request.user.username|slice:":2"|upper }}
                 </div>
                 
                 <a href="{% url 'login' %}" class="text-slate-400 hover:text-red-600 transition-colors pl-2 border-l border-slate-200 py-1 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider" title="Terminate Session">
-                    <i class="fa-solid fa-right-from-bracket text-base"></i>
                     <span class="hidden sm:inline">Logout</span>
                 </a>
             </div>
@@ -44,17 +45,14 @@
         </div>
     </div>
 </header>
-        
     {% endblock %}
-
-   
 
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         
         {% if messages %}
         <div class="space-y-2">
             {% for message in messages %}
-            <div class="p-4 rounded-lg text-sm font-medium border flex items-center gap-3 shadow-sm
+            <div class="p-4 rounded-lg text-sm font-medium border flex items-center gap-3 shadow-xs
                 {% if message.tags == 'success' %} bg-emerald-50 border-emerald-200 text-emerald-800
                 {% elif message.tags == 'error' %} bg-rose-50 border-rose-200 text-rose-800
                 {% else %} bg-blue-50 border-blue-200 text-blue-800 {% endif %}">
@@ -67,56 +65,64 @@
 
         {% block dash_links %}
             {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' or request.user.is_superuser %}
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">
+            <div class="bg-blue-50/40 border border-blue-100/60 rounded-xl p-4 shadow-xs">
+                <h2 class="text-[10px] font-black text-blue-500/80 uppercase tracking-wider mb-3">
                     Administrative Control Operations
                 </h2>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                  
-                    <a href="{% if request.user.role == 'ADMIN' or request.user.is_superuser %}{% url 'admin_dashboard' %}{% elif request.user.role == 'MANAGER' or request.user.role == 'STORE_MANAGER' %}{% url 'inventory_dashboard' %}{% endif %}" 
-                       class="p-3 rounded-lg text-center transition-all group shadow-sm border 
-                       {% if request.resolver_match.url_name == 'inventory_dashboard' or request.resolver_match.url_name == 'procurement_dashboard' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
-                        <span class="block text-xs font-black uppercase tracking-wide text-slate-800 group-hover:text-blue-600">
+                    <!-- LINK BLOCK: Overview Dashboard -->
+                    <a href="{% if request.user.role == 'ADMIN' or request.user.is_superuser %}{% url 'admin_dashboard' %}{% elif request.user.role == 'MANAGER' %}{% url 'inventory_dashboard' %}{% endif %}" 
+                       class="p-3 rounded-lg text-center transition-all group shadow-xs border 
+                       {% if request.resolver_match.url_name == 'inventory_dashboard' or request.resolver_match.url_name == 'admin_dashboard' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white/80 border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'inventory_dashboard' or request.resolver_match.url_name == 'admin_dashboard' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
                             Overview Dashboard
                         </span>
-                        <span class="block text-[10px] font-medium mt-0.5 text-slate-400">System metrics</span>
+                        <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'inventory_dashboard' or request.resolver_match.url_name == 'admin_dashboard' %} text-blue-500 {% else %} text-slate-400 {% endif %}">System metrics</span>
                     </a>
-                    {% if request.user.role == 'MANAGER' or request.user.role == 'STORE_MANAGER' %}
+
+                    {% if request.user.role == 'MANAGER' %}
+                    <!-- LINK BLOCK: Product Registry -->
                     <a href="{% url 'product_list' %}" 
-                       class="p-3 rounded-lg text-center transition-all group shadow-sm border 
-                       {% if request.resolver_match.url_name == 'product_list' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
-                        <span class="block text-xs font-black uppercase tracking-wide text-slate-800 group-hover:text-blue-600">
+                       class="p-3 rounded-lg text-center transition-all group shadow-xs border 
+                       {% if request.resolver_match.url_name == 'product_list' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white/80 border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'product_list' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
                             Product Registry
                         </span>
-                        <span class="block text-[10px] font-medium mt-0.5 text-slate-400">Master balances</span>
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'stock_movement' %}" 
-                       class="p-3 rounded-lg text-center transition-all group shadow-sm border 
-                       {% if request.resolver_match.url_name == 'stock_movement' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
-                        <span class="block text-xs font-black uppercase tracking-wide text-slate-800 group-hover:text-blue-600">
-                            Stock Movements
-                        </span>
-                        <span class="block text-[10px] font-medium mt-0.5 text-slate-400">Audit track logs</span>
-                    </a>
-                    {% if request.user.role == 'MANAGER' or request.user.role == 'STORE_MANAGER' %}
-                    <a href="{% url 'supplier_registration' %}" 
-                       class="p-3 rounded-lg text-center transition-all group shadow-sm border 
-                       {% if request.resolver_match.url_name == 'supplier_registration' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
-                        <span class="block text-xs font-black uppercase tracking-wide text-slate-800 group-hover:text-blue-600">
-                            Onboard Vendor
-                        </span>
-                        <span class="block text-[10px] font-medium mt-0.5 text-slate-400">Supplier matrix</span>
+                        <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'product_list' %} text-blue-500 {% else %} text-slate-400 {% endif %}">Master balances</span>
                     </a>
                     {% endif %}
 
+                    <!-- LINK BLOCK: Stock Movements -->
+                    <a href="{% url 'stock_movement' %}" 
+                       class="p-3 rounded-lg text-center transition-all group shadow-xs border 
+                       {% if request.resolver_match.url_name == 'stock_movement' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white/80 border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'stock_movement' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
+                            Stock Movements
+                        </span>
+                        <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'stock_movement' %} text-blue-500 {% else %} text-slate-400 {% endif %}">Audit track logs</span>
+                    </a>
+
+                    {% if request.user.role == 'MANAGER' %}
+                    <!-- LINK BLOCK: Onboard Vendor -->
+                    <a href="{% url 'supplier_registration' %}" 
+                       class="p-3 rounded-lg text-center transition-all group shadow-xs border 
+                       {% if request.resolver_match.url_name == 'supplier_registration' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white/80 border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'supplier_registration' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
+                            Onboard Vendor
+                        </span>
+                        <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'supplier_registration' %} text-blue-500 {% else %} text-slate-400 {% endif %}">Supplier matrix</span>
+                    </a>
+                    {% endif %}
+
+                    <!-- LINK BLOCK: Debt Ledger -->
                     <a href="{% url 'supplier_debt_list' %}" 
-                       class="p-3 rounded-lg text-center transition-all group shadow-sm col-span-2 sm:col-span-1 border 
-                       {% if request.resolver_match.url_name == 'supplier_debt_list' %} bg-blue-50 border-blue-300 text-blue-700 {% else %} bg-white border-slate-200 hover:border-slate-300 {% endif %}">
-                        <span class="block text-xs font-black uppercase tracking-wide text-slate-800 group-hover:text-blue-600">
+                       class="p-3 rounded-lg text-center transition-all group shadow-xs col-span-2 sm:col-span-1 border 
+                       {% if request.resolver_match.url_name == 'supplier_debt_list' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white/80 border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'supplier_debt_list' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
                             Debt Ledger
                         </span>
-                        <span class="block text-[10px] font-medium mt-0.5 text-slate-400">Procurement credit</span>
+                        <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'supplier_debt_list' %} text-blue-500 {% else %} text-slate-400 {% endif %}">Procurement credit</span>
                     </a>
 
                 </div>
@@ -131,7 +137,7 @@
 
     </main>
 
-    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400 font-medium mt-auto">
+    <footer class="bg-white border-t border-blue-100/70 py-4 text-center text-xs text-slate-400 font-medium mt-auto">
         &copy; 2026 Nyondo Hardware Management System &middot; Driven by Double-Entry Logic
     </footer>
 

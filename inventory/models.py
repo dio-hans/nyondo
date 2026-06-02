@@ -97,6 +97,15 @@ class Product(models.Model):
     default=1
 )
     
+    def days_until_stockout(self):
+        """
+        Dynamically calculates remaining stock runway by dividing current count
+        by the average historical daily consumption sales pace.
+        """
+        # If daily sales pace is 0, return None to avoid a ZeroDivisionError crash
+        if self.average_daily_sales and self.average_daily_sales > 0:
+            return int(self.current_stock / self.average_daily_sales)
+        return None
 
     def clean(self):
         if self.selling_price is not None and self.cost_price is not None:

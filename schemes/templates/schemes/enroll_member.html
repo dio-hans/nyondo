@@ -6,7 +6,7 @@
     <!-- Header Block -->
     <div class="mb-6">
         <h1 class="text-2xl font-black text-slate-900 tracking-tight">
-            <i class="fa-solid fa-user-plus text-blue-600 mr-1.5 text-xl"></i> Enroll Scheme Client
+             Enroll Scheme Client
         </h1>
         <p class="text-sm text-slate-500 mt-0.5">Register salary earners, set savings targets, capture deposits, and log security metrics.</p>
     </div>
@@ -17,9 +17,9 @@
         {% for message in messages %}
         <div class="p-4 rounded-lg text-sm font-bold flex items-center gap-2 border {% if message.tags == 'error' %}bg-red-50 text-red-800 border-red-200{% else %}bg-green-50 text-green-800 border-green-200{% endif %}">
             {% if message.tags == 'error' %}
-            <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+            
             {% else %}
-            <i class="fa-solid fa-circle-check text-green-500"></i>
+           
             {% endif %}
             {{ message }}
         </div>
@@ -29,13 +29,13 @@
 
     <!-- Configuration Enrollment Base Form Card -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <form method="POST" action="{% url 'schemes:enroll_customer' %}" class="p-6 sm:p-8 space-y-8">
+        <form method="POST" action="{% url 'enroll_customer' %}" class="p-6 sm:p-8 space-y-8">
             {% csrf_token %}
 
             <!-- Section Step 1: Profile Mapping -->
             <div class="space-y-4">
                 <h3 class="text-xs font-black text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-2">
-                    <i class="fa-solid fa-id-card text-slate-400 mr-1"></i> Step 1: Primary Profile Identification
+                     Step 1: Primary Profile Identification
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     
@@ -87,7 +87,7 @@
             <!-- Section Step 2: Financial Caps Allocation -->
             <div class="space-y-4">
                 <h3 class="text-xs font-black text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-2">
-                    <i class="fa-solid fa-scale-balanced text-slate-400 mr-1"></i> Step 2: Financial Commitments & Terms
+                    Step 2: Financial Commitments & Terms
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     
@@ -132,7 +132,7 @@
             <!-- Section Step 3: Security & Next of Kin Allocation -->
             <div class="space-y-4">
                 <h3 class="text-xs font-black text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-2">
-                    <i class="fa-solid fa-shield-halved text-slate-400 mr-1"></i> Step 3: Next of Kin Security Information
+                   Step 3: Next of Kin Security Information
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
@@ -155,7 +155,7 @@
 
             <!-- Execution Action Call Panel Buttons -->
             <div class="flex items-center justify-end gap-3 pt-5 border-t border-slate-100">
-                <a href="{% url 'schemes:schemes_list' %}" class="px-4 py-2.5 text-xs font-black uppercase tracking-wider text-slate-500 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-700 transition-all">
+                <a href="{% url 'schemes_list' %}" class="px-4 py-2.5 text-xs font-black uppercase tracking-wider text-slate-500 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-700 transition-all">
                     Cancel
                 </a>
                 <button type="submit" class="px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-all">

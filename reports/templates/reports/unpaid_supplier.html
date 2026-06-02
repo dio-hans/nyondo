@@ -5,14 +5,14 @@
 
 {% block content %}
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-    <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:col-span-2 flex flex-col justify-center">
+    <div class="bg-blue-50/30 border border-blue-100/60 rounded-xl shadow-xs p-6 md:col-span-2 flex flex-col justify-center">
         <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">
             <i class="fa-solid fa-business-time text-rose-600 mr-1"></i> Outstanding Factory Credit Liabilities
         </h2>
         <p class="text-xs text-slate-400 font-medium mt-1">Aging summary ledger representing unpaid materials inventory values.</p>
     </div>
 
-    <div class="bg-rose-50 border border-rose-100 rounded-xl p-6 flex flex-col justify-between">
+    <div class="bg-rose-50/50 border border-rose-100 rounded-xl p-6 flex flex-col justify-between shadow-xs">
         <span class="text-[10px] font-black text-rose-800 uppercase tracking-widest">Total Outstanding Debt</span>
         <span class="text-xl font-black text-rose-700 tracking-tight mt-2">
             UGX {{ supplier_debt|intcomma }}
@@ -20,41 +20,69 @@
     </div>
 </div>
 
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
+<div class="bg-white border border-blue-100/60 rounded-xl shadow-xs overflow-hidden text-xs">
     <table class="w-full text-left border-collapse">
         <thead>
-            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase text-slate-500">
-                <th class="p-4 pl-6">Supplier Source Depot</th>
-                <th class="p-4">Material Batch Received</th>
-                <th class="p-4 text-center">Delivered Qty</th>
-                <th class="p-4 text-right pr-6">Outstanding Payable Balance</th>
+            <tr class="bg-slate-950 text-[10px] font-black uppercase tracking-wider text-white">
+                <th class="p-4 pl-6 border-x border-slate-800">Supplier Source Depot</th>
+                <th class="p-4 border-x border-slate-800">Material Batch Received</th>
+                <th class="p-4 text-center border-x border-slate-800">Delivered Qty</th>
+                <th class="p-4 text-right pr-6 border-x border-slate-800">Outstanding Payable Balance</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-            {% for purchase in unpaid_supplier_orders %}
-            <tr class="hover:bg-slate-50/50 transition-colors">
-                <td class="p-4 pl-6 font-black text-slate-900 uppercase">
+    {% for purchase in unpaid_supplier_orders %}
+        {% for item in purchase.purchaseitem_set.all %}
+        <tr class="hover:bg-blue-50/20 transition-colors">
+            
+            <td class="p-4 pl-6 font-black text-slate-900 uppercase border-x border-slate-100/70">
+                {% if forloop.first %}
                     {{ purchase.supplier.name }}
-                </td>
-                <td class="p-4 text-slate-500 font-bold">
-                    {{ purchase.product.name }}
-                </td>
-                <td class="p-4 text-center text-slate-600">
-                    {{ purchase.quantity|intcomma }} items
-                </td>
-                <td class="p-4 text-right pr-6 font-black text-rose-700">
+                {% else %}
+                    <span class="text-slate-300 font-normal text-[10px] uppercase tracking-tight">↳ Continued</span>
+                {% endif %}
+            </td>
+            
+            <td class="p-4 text-slate-900 font-black uppercase border-x border-slate-100/70">
+                {{ item.product.name }}
+            </td>
+            
+            <td class="p-4 text-center text-slate-700 border-x border-slate-100/70 font-mono font-bold">
+                {{ item.quantity|intcomma }} pcs
+            </td>
+            
+            <td class="p-4 text-right pr-6 font-black text-rose-700 bg-blue-50/10 border-x border-slate-100/70 font-mono text-sm">
+                {% if forloop.first %}
                     UGX {{ purchase.balance|intcomma }}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-slate-50/30">
-                    <i class="fa-solid fa-circle-check text-emerald-500 text-lg block mb-2"></i>
-                    Excellent. All supplier credit balances stand fully settled.
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
+                {% else %}
+                    <span class="text-slate-400 font-normal text-xs">—</span>
+                {% endif %}
+            </td>
+            
+        </tr>
+        {% empty %}
+        <tr class="hover:bg-blue-50/20 transition-colors">
+            <td class="p-4 pl-6 font-black text-slate-900 uppercase border-x border-slate-100/70">
+                {{ purchase.supplier.name }}
+            </td>
+            <td class="p-4 text-amber-600 font-semibold font-mono text-[10px] border-x border-slate-100/70 bg-amber-50/50">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i> No Items Linked
+            </td>
+            <td class="p-4 text-center text-slate-400 border-x border-slate-100/70">—</td>
+            <td class="p-4 text-right pr-6 font-black text-rose-700 bg-blue-50/10 border-x border-slate-100/70 font-mono text-sm">
+                UGX {{ purchase.balance|intcomma }}
+            </td>
+        </tr>
+        {% endfor %}
+    {% empty %}
+    <tr>
+        <td colspan="4" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-blue-50/10 border-x border-slate-100/70">
+            <i class="fa-solid fa-circle-check text-emerald-500 text-lg block mb-2"></i>
+            Excellent. All supplier credit balances stand fully settled.
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
     </table>
 </div>
 {% endblock %}

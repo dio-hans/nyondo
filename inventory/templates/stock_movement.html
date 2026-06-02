@@ -17,38 +17,43 @@
 
     {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' or perms.inventory.view_stockmovement %}
         
-        <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <!-- Frame container shifted to custom soft-blue tint style -->
+        <div class="bg-white border border-blue-100/60 rounded-xl shadow-xs overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-400 uppercase text-[10px] tracking-wider font-black">
-                            <th class="p-4 pl-6">Timestamp</th>
-                            <th class="p-4">Product Description</th>
-                            <th class="p-4 text-center">Transaction Type</th>
-                            <th class="p-4 text-right">Qty Affected</th>
-                            <th class="p-4 pl-8">Audit Log Notes / Reference</th>
+                        <!-- UPDATED: Solid executive black row background with dark, clean column separators -->
+                        <tr class="bg-slate-950 text-white uppercase text-[10px] tracking-wider font-black">
+                            <th class="p-4 pl-6 border-x border-slate-800">Timestamp</th>
+                            <th class="p-4 border-x border-slate-800">Product Description</th>
+                            <th class="p-4 text-center border-x border-slate-800">Transaction Type</th>
+                            <th class="p-4 text-right border-x border-slate-800">Qty Affected</th>
+                            <th class="p-4 pl-8 border-x border-slate-800">Audit Log Notes / Reference</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                         {% for movement in movements %}
-                            <tr class="hover:bg-slate-50/80 transition-colors">
+                            <tr class="hover:bg-blue-50/20 transition-colors">
                                 
-                                <td class="p-4 pl-6 text-slate-400 font-mono text-[11px] whitespace-nowrap">
+                                <!-- Timestamp -->
+                                <td class="p-4 pl-6 text-slate-400 font-mono text-[11px] whitespace-nowrap border-x border-slate-100">
                                     {{ movement.created_at|date:"Y-m-d H:i" }}
                                 </td>
                                 
-                                <td class="p-4 font-black text-slate-900 uppercase">
+                                <!-- Product Description -->
+                                <td class="p-4 font-black text-slate-900 uppercase border-x border-slate-100">
                                     {{ movement.product.name }}
                                 </td>
                                 
-                                <td class="p-4 text-center whitespace-nowrap">
+                                <!-- Transaction Type -->
+                                <td class="p-4 text-center whitespace-nowrap border-x border-slate-100">
                                     {% if movement.transaction_type == 'IN' %}
                                         <span class="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide inline-block">
                                           Stock In
                                         </span>
                                     {% elif movement.transaction_type == 'OUT' %}
                                         <span class="bg-rose-50 text-rose-700 border border-rose-100 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide inline-block">
-                                            Sale Out
+                                           Sale Out
                                         </span>
                                     {% else %}
                                         <span class="bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide inline-block">
@@ -57,7 +62,8 @@
                                     {% endif %}
                                 </td>
                                 
-                                <td class="p-4 text-right font-mono font-bold whitespace-nowrap text-xs
+                                <!-- Qty Affected -->
+                                <td class="p-4 text-right font-mono font-bold whitespace-nowrap text-xs border-x border-slate-100
                                     {% if movement.transaction_type == 'OUT' %}text-rose-600
                                     {% elif movement.transaction_type == 'IN' %}text-emerald-600
                                     {% else %}text-amber-600{% endif %}">
@@ -67,13 +73,14 @@
                                     {% endif %}{{ movement.quantity|intcomma }}
                                 </td>
                                 
-                                <td class="p-4 pl-8 text-slate-500 font-mono text-[11px] max-w-xs truncate">
+                                <!-- Audit Log Notes / Reference -->
+                                <td class="p-4 pl-8 text-slate-500 font-mono text-[11px] max-w-xs truncate border-x border-slate-100">
                                     {{ movement.notes|default:"Manual ledger adjustment override." }}
                                 </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="5" class="p-12 text-center text-slate-400 font-bold uppercase tracking-wide bg-slate-50/20">
+                                <td colspan="5" class="p-12 text-center text-slate-400 font-bold uppercase tracking-wide bg-blue-50/10 border-x border-slate-100">
                                     No warehouse stock adjustments or movements logged in database fields.
                                 </td>
                             </tr>
@@ -84,7 +91,8 @@
         </div>
 
     {% else %}
-        <div class="bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm space-y-4 max-w-md mx-auto">
+        <!-- Security Clearance Fallback Container -->
+        <div class="bg-white border border-blue-100/60 rounded-2xl p-8 text-center shadow-xs space-y-4 max-w-md mx-auto">
             <div class="space-y-1">
                 <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider text-rose-600">Audit Security Clearance Required</h3>
                 <p class="text-xs text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
