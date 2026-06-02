@@ -47,6 +47,14 @@
 </header>
     {% endblock %}
 
+    {% if messages %}
+    {% for message in messages %}
+        <div class="p-4 mb-4 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         
         {% if messages %}

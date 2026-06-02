@@ -1,11 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.db.models import (
     Sum,
     F,
     Count,
     DecimalField,
-    ExpressionWrapper
-)
+    ExpressionWrapper)
+from .forms import ExpenseForm
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -16,6 +17,7 @@ from sales.models import SalesOrder, SalesOrderItem
 from procurement.models import PurchaseOrder
 from inventory.models import Product, StockMovement 
 from schemes.models import SavingsScheme
+from .models import Expense
 
 
 User = get_user_model()
@@ -118,39 +120,6 @@ def business_dashboard(request):
         'estimated_profit': estimated_profit,                 # Match Card 3
     }
     return render(request, 'reports/admin_dashboard.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
-def financial_statement_view(request):
-    completed_sales = SalesOrder.objects.filter(status='COMPLETED')
-    
-    completed_sales, _, today, start_date, end_date = apply_date_filters(request, completed_sales)
-
-    total_sales = completed_sales.aggregate(total=Sum('total_amount'))['total'] or 0
-
-    sale_items = SalesOrderItem.objects.filter(sales_order__in=completed_sales)
-    cogs_expression = ExpressionWrapper(
-        F('product__cost_price') * F('quantity'),
-        output_field=DecimalField()
-    )
-    cogs = sale_items.aggregate(total=Sum(cogs_expression))['total'] or 0
-
-    gross_profit = total_sales - cogs
-    transport_income = completed_sales.aggregate(total=Sum('transport_fee'))['total'] or 0
-    net_profit = gross_profit + transport_income
-
-    context = {
-        'total_sales': total_sales,
-        'cogs': cogs,
-        'gross_profit': gross_profit,
-        'transport_income': transport_income,
-        'net_profit': net_profit,
-        'today': today,
-        'start_date': start_date,
-        'end_date': end_date,
-    }
-    return render(request, 'reports/financial_statement.html', context)
 
 
 @login_required
@@ -274,3 +243,90 @@ def transport_revenue_view(request):
 @user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
 def reports_index_view(request):
     return render(request, 'reports/reports_index.html')
+
+@login_required
+@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
+def general_sales_report(request):
+    sales = SalesOrder.objects.filter(status='COMPLETED')
+    sales, _, today, start_date, end_date = apply_date_filters(request, sales)
+
+    # Aggregate performance by product
+    sales_data = SalesOrderItem.objects.filter(sales_order__in=sales).values(
+        'product__name'
+    ).annotate(
+        total_quantity=Sum('quantity'),
+        total_revenue=Sum('subtotal'),
+        transaction_count=Count('sales_order')
+    ).order_by('-total_revenue')
+
+    total_gross_revenue = sales_data.aggregate(total=Sum('total_revenue'))['total'] or 0
+
+    context = {
+        'sales_data': sales_data,
+        'total_gross_revenue': total_gross_revenue,
+        'today': today,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+    return render(request, 'reports/general_sales.html', context)
+
+@login_required
+def log_expense(request):
+    if request.method == 'POST':
+        form = ExpenseForm(request.POST)
+        if form.is_valid():
+            expense = form.save(commit=False)
+            expense.recorded_by = request.user
+            expense.save()
+            messages.success(request, "Expense successfully logged to the ledger.")
+            return redirect('financial_statement')
+    else:
+        form = ExpenseForm()
+    
+    return render(request, 'reports/log_expenses.html', {'form': form})
+
+# reports/views.py
+
+@login_required
+@user_passes_test(is_admin_only, login_url='product_list')
+def financial_statement_view(request):
+    # 1. Filter Sales
+    sales = SalesOrder.objects.filter(status='COMPLETED')
+    sales, _, today, start_date, end_date = apply_date_filters(request, sales)
+    
+    # 2. Calculate Financials
+    total_revenue = sales.aggregate(total=Sum('total_amount'))['total'] or 0
+    transport_income = sales.aggregate(total=Sum('transport_fee'))['total'] or 0
+    
+    # 3. Calculate COGS
+    cogs = SalesOrderItem.objects.filter(sales_order__in=sales).aggregate(
+        total=Sum(ExpressionWrapper(F('product__cost_price') * F('quantity'), output_field=DecimalField()))
+    )['total'] or 0
+    
+    # 4. Filter Expenses by the same date range
+    expenses = Expense.objects.all()
+    if start_date and end_date:
+        expenses = expenses.filter(date_incurred__range=[start_date, end_date])
+    elif request.GET.get('preset') == 'today':
+        expenses = expenses.filter(date_incurred=today)
+    elif request.GET.get('preset') == 'this_month':
+        expenses = expenses.filter(date_incurred__month=today.month, date_incurred__year=today.year)
+        
+    total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or 0
+    
+    # 5. Result Calculations
+    gross_profit = total_revenue - cogs
+    net_profit = (gross_profit + transport_income) - total_expenses
+    
+    context = {
+        'total_revenue': total_revenue,
+        'transport_income': transport_income,
+        'cogs': cogs,
+        'total_expenses': total_expenses,
+        'gross_profit': gross_profit,
+        'net_profit': net_profit,
+        'today': today,
+        'start_date': start_date,
+        'end_date': end_date
+    }
+    return render(request, 'reports/financial_statement.html', context)

@@ -4,27 +4,42 @@
 {% block title %}Financial Income Statement | Nyondo Hardware{% endblock %}
 
 {% block content %}
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
+<!-- Unified Control Panel -->
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 no-print">
     <div>
         <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">
-            Financial Income Statement
+            Consolidated Financial Statement
         </h2>
-        <p class="text-xs text-slate-400 font-medium">Consolidated ledger detailing wholesale & retail revenue performance, material costs, and logistics margins.</p>
+        <p class="text-xs text-slate-400 font-medium mt-0.5">Real-time P&L audit tracking revenue, COGS, and operating overheads.</p>
     </div>
-    <div class="flex gap-2">
-        <button onclick="window.print();" class="bg-slate-900 text-white px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider hover:bg-slate-800 transition">
-             Print Statement
-        </button>
+    
+    <!-- Date Filter Engine -->
+    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+        <div class="flex items-center gap-1.5 text-[11px] font-bold">
+            <a href="?preset=today" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'today' %}bg-emerald-600 text-white hover:bg-emerald-700{% endif %}">Today</a>
+            <a href="?preset=yesterday" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'yesterday' %}bg-emerald-600 text-white hover:bg-emerald-700{% endif %}">Yesterday</a>
+            <a href="?preset=this_month" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'this_month' or not request.GET.preset and not request.GET.start_date %}bg-emerald-600 text-white hover:bg-emerald-700{% endif %}">This Month</a>
+        </div>
+        
+        <form method="GET" class="flex items-center gap-2 text-[11px] font-bold sm:ml-auto lg:ml-0">
+            <input type="date" name="start_date" value="{{ start_date|default:'' }}" required class="border border-slate-200 px-2 py-1 rounded-md text-slate-700 focus:outline-none focus:border-emerald-500">
+            <span class="text-slate-400">to</span>
+            <input type="date" name="end_date" value="{{ end_date|default:'' }}" required class="border border-slate-200 px-2 py-1 rounded-md text-slate-700 focus:outline-none focus:border-emerald-500">
+            <button type="submit" class="bg-slate-900 text-white px-3 py-1 rounded-md uppercase tracking-wider hover:bg-slate-800 transition-colors">Run</button>
+        </form>
     </div>
 </div>
 
+<!-- Statement Body -->
 <div class="max-w-3xl mx-auto bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden font-sans text-xs print:border-0 print:shadow-none">
-    
     <div class="bg-slate-900 text-white p-6 border-b border-slate-800">
         <div class="flex justify-between items-start">
             <div>
                 <h3 class="text-base font-black tracking-tight uppercase">NYONDO General Hardware LTD</h3>
                 <p class="text-[10px] text-slate-400 font-medium mt-0.5">Nansana, Kampala, Uganda</p>
+                <p class="text-[10px] text-emerald-400 font-bold mt-2">
+                    Period: {{ start_date|default:"Beginning" }} to {{ end_date|default:"Today" }}
+                </p>
             </div>
             <div class="text-right text-[10px] text-slate-400 font-medium">
                 <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded font-bold uppercase tracking-wider border border-emerald-500/20">Official Audit</span>
@@ -34,40 +49,48 @@
     </div>
 
     <div class="p-6 space-y-4">
-        
+        <!-- Revenue -->
         <div class="flex justify-between items-center py-3 border-b border-slate-100">
             <div>
                 <span class="font-black text-slate-900 uppercase tracking-wide">Gross Hardware Revenue</span>
-                <p class="text-[11px] text-slate-400 mt-0.5">Accumulated total from all finalized sales invoices.</p>
             </div>
-            <span class="text-sm font-black text-slate-900">UGX {{ total_sales|intcomma }}</span>
+            <span class="text-sm font-black text-slate-900">UGX {{ total_revenue|intcomma }}</span>
         </div>
 
+        <!-- COGS -->
         <div class="flex justify-between items-center py-3 border-b border-slate-100 bg-rose-50/30 px-3 rounded-lg border border-rose-100/50">
             <div>
-                <span class="font-black text-rose-900 uppercase tracking-wide">Less: Cost of Goods Sold (COGS)</span>
-                <p class="text-[11px] text-rose-600/70 mt-0.5">Aggregated material factory cost prices (Pre-determined units outlay).</p>
+                <span class="font-black text-rose-900 uppercase tracking-wide"> Cost of Goods Sold (COGS)</span>
             </div>
             <span class="text-sm font-black text-rose-700">(UGX {{ cogs|intcomma }})</span>
         </div>
 
+        <!-- Gross Profit -->
         <div class="flex justify-between items-center py-3 px-3 bg-slate-50 border border-slate-200 rounded-lg">
             <span class="font-black text-slate-800 uppercase tracking-wider text-[11px]">Gross Operating Profit</span>
             <span class="text-base font-black text-slate-900 border-b-2 border-slate-900 pb-0.5">UGX {{ gross_profit|intcomma }}</span>
         </div>
 
+        <!-- Transport -->
         <div class="flex justify-between items-center py-3 border-b border-slate-100">
             <div>
                 <span class="font-black text-slate-900 uppercase tracking-wide">Add: Transport Freight Revenue</span>
-                <p class="text-[11px] text-slate-400 mt-0.5">Automated logistics fees (Surcharges collected outside 10km free delivery boundary).</p>
             </div>
             <span class="text-sm font-black text-emerald-600">+ UGX {{ transport_income|intcomma }}</span>
         </div>
 
+        <!-- Expenses -->
+        <div class="flex justify-between items-center py-3 border-b border-rose-100 bg-rose-50/20 px-3 rounded-lg">
+            <div>
+                <span class="font-black text-rose-900 uppercase tracking-wide">Less: Total Operating Expenses</span>
+            </div>
+            <span class="text-sm font-black text-rose-700">(UGX {{ total_expenses|intcomma }})</span>
+        </div>
+
+        <!-- Net Profit -->
         <div class="mt-6 p-5 bg-slate-900 text-white rounded-xl flex justify-between items-center shadow-sm">
             <div>
-                <h4 class="font-black uppercase tracking-wider text-sm">Net Retained Profit (Estimate)</h4>
-                <p class="text-[11px] text-slate-400 mt-0.5">Net hardware enterprise earnings after systemic logistics and outlays consolidation.</p>
+                <h4 class="font-black uppercase tracking-wider text-sm">Net Retained Profit</h4>
             </div>
             <div class="text-right">
                 <span class="text-xl font-black text-emerald-400 tracking-tight block">
@@ -75,14 +98,12 @@
                 </span>
             </div>
         </div>
-
     </div>
 
+    <!-- Print Footer -->
     <div class="bg-slate-50 border-t border-slate-200 px-6 py-3 flex justify-between items-center text-[11px] font-bold no-print">
-        <a href="{% url 'reports_index' %}" class="text-slate-500 hover:text-slate-900 uppercase tracking-wider transition">
-           Return to Reports Matrix
-        </a>
-        <span class="text-slate-400 uppercase">Nyondo Stock Reporting Engine v2.0</span>
+        <a href="{% url 'reports_index' %}" class="text-slate-500 hover:text-slate-900 uppercase tracking-wider transition">Return to Reports Matrix</a>
+        <button onclick="window.print()" class="text-emerald-600 uppercase hover:underline">Print Statement</button>
     </div>
 </div>
 {% endblock %}

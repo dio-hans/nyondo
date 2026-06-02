@@ -12,6 +12,15 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <a href="{% url 'sales_report' %}" class="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-sm group transition-all flex flex-col justify-between">
+            <div>
+                <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider group-hover:text-blue-600 transition-colors mb-1">
+                    General Sales Performance
+                </h4>
+                <p class="text-[11px] text-slate-400 font-medium leading-relaxed">Audit front-desk transaction logs. Tracks checkout ticket clear volumes and computes individual cash generation rankings for performance bonuses.</p>
+            </div>
+            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mt-4 block">View Staff Rankings &rarr;</span>
+        </a>
         
         <a href="{% url 'financial_statement' %}" class="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-sm group transition-all flex flex-col justify-between">
             <div>
@@ -21,6 +30,16 @@
                 <p class="text-[11px] text-slate-400 font-medium leading-relaxed">Review overall business health. Computes total completed revenues, tracks explicit Cost of Goods Sold (COGS), and delivers net period estimated profits.</p>
             </div>
             <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mt-4 block">View Balance Logs &rarr;</span>
+        </a>
+
+        <a href="{% url 'log_expense' %}" class="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-sm group transition-all flex flex-col justify-between">
+            <div>
+                <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider group-hover:text-blue-600 transition-colors mb-1">
+                    General expenses
+                </h4>
+                <p class="text-[11px] text-slate-400 font-medium leading-relaxed">Audit front-desk transaction logs. Tracks checkout ticket clear volumes and computes individual cash generation rankings for performance bonuses.</p>
+            </div>
+            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mt-4 block">View Staff Rankings &rarr;</span>
         </a>
 
         <a href="{% url 'unpaid_supplier' %}" class="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-sm group transition-all flex flex-col justify-between">

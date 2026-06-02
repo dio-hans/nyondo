@@ -11,6 +11,8 @@ urlpatterns = [
     path('least-selling/', views.least_selling_view, name='least_selling'),
     path('transport-revenue/', views.transport_revenue_view, name='transport_revenue'),
     path('reports_index/', views.reports_index_view, name='reports_index'),
+    path('sales_report/', views.general_sales_report, name='sales_report'),
+    path('log-expense/', views.log_expense, name='log_expense'),
 
 ]
     

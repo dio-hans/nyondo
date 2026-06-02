@@ -51,9 +51,10 @@
         <p class="text-xs text-slate-500 font-medium mt-0.5">Active tracking arrays for wholesale & retail inventory configurations.</p>
     </div>
     <div class="flex items-center gap-4 self-start sm:self-center">
-        <a href="{% url 'inventory_dashboard' %}" class="text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 tracking-wider flex items-center gap-1 transition-colors">
-            Back to dashboard
-        </a>
+        <a href="{% if request.user.role == 'SALES' %}{% url 'record_sale' %}{% endif %}" 
+   class="text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 tracking-wider flex items-center gap-1 transition-colors">
+     Go Back
+</a>
         {% if request.user.role == 'MANAGER' or request.user.role == 'STORE_MANAGER' %}
             <a href="{% url 'product_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
                 Register New Stock
@@ -94,7 +95,7 @@
                         {% if product.days_until_stockout is not None %}
                             {% if product.days_until_stockout <= 7 %}
                                 <span class="text-rose-700 font-black px-2 py-1 bg-rose-50 border border-rose-100 rounded text-[10px] uppercase tracking-wide inline-block animate-pulse">
-                                    <i class="fa-solid fa-triangle-exclamation mr-0.5"></i> {{ product.days_until_stockout }} Days Remaining
+                                    {{ product.days_until_stockout }} Days Remaining
                                 </span>
                             {% else %}
                                 <span class="text-emerald-700 px-2 py-0.5 bg-emerald-50 border border-emerald-100 rounded text-[11px]">
