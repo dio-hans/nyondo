@@ -83,7 +83,7 @@
                 Capital Asset Investment
             </span>
             <span class="text-xl font-black text-white font-mono tracking-tight mt-2 block">
-                UGX {{ stock_valuation|default:0|floatformat:0|intcomma }}
+                UGX {{ stock_valuation|default:"0" }}
             </span>
             <span class="text-[10px] text-slate-400 font-medium mt-1 block">
                 Total compound warehouse cost
@@ -97,7 +97,7 @@
                 Expected Margin Yield
             </span>
             <span class="text-xl font-black text-emerald-400 font-mono tracking-tight mt-2 block">
-                UGX {{ estimated_profit|default:0|floatformat:0|intcomma }}
+                UGX {{ estimated_profit|default:"0" }}
             </span>
             <span class="text-[10px] text-slate-400 font-medium mt-1 block">
                 Projected retail profit overhead

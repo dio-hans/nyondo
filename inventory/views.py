@@ -35,8 +35,8 @@ def inventory_dashboard(request):
     
     low_stock_products = Product.objects.filter(current_stock__lte=F('reorder_level'))
 
-    total_stock_value = sum(p.current_stock * p.cost_price for p in products)
-    expected_profit = sum(p.current_stock * (p.selling_price - p.cost_price) for p in products)
+    total_stock_value = f"{int(sum(p.current_stock * p.cost_price for p in products)):,}"
+    expected_profit = f"{int(sum(p.current_stock * (p.selling_price - p.cost_price) for p in products)):,}"
     recent_movements = StockMovement.objects.order_by('-created_at')[:5]
 
     context = {
