@@ -6,7 +6,7 @@
 {% block content %}
 <div class="mb-6 flex justify-between items-center">
     <a href="{% url 'schemes_list' %}" class="inline-flex items-center text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-wider">
-        ← Back to Registry
+         Back to Registry
     </a>
     <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">
         Account ID: #{{ scheme.id }}
@@ -59,40 +59,78 @@
     </div>
 </div>
 
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
-    <div class="p-4 bg-slate-50 border-b border-slate-200">
-        <h4 class="font-black text-[10px] text-slate-400 uppercase tracking-wider">Historical Account Cash Flow Deposits</h4>
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+    <div>
+        <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">
+            Historical Account Ledger
+        </h2>
+        <p class="text-xs text-slate-400 font-medium mt-0.5">Comprehensive history of cash deposits and targeted material disbursals.</p>
     </div>
     
+    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+        <div class="flex items-center gap-1.5 text-[11px] font-bold">
+            <a href="?preset=today" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'today' %}bg-blue-600 text-white hover:bg-blue-700{% endif %}">Today</a>
+            <a href="?preset=yesterday" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'yesterday' %}bg-blue-600 text-white hover:bg-blue-700{% endif %}">Yesterday</a>
+            <a href="?preset=this_month" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 uppercase tracking-wider transition-colors {% if request.GET.preset == 'this_month' or not request.GET.preset and not request.GET.start_date %}bg-blue-600 text-white hover:bg-blue-700{% endif %}">This Month</a>
+        </div>
+        
+        <form method="GET" class="flex items-center gap-2 text-[11px] font-bold sm:ml-auto lg:ml-0">
+            <input type="date" name="start_date" value="{{ start_date|default:'' }}" required class="border border-slate-200 px-2 py-1 rounded-md text-slate-700 focus:outline-none focus:border-blue-500">
+            <span class="text-slate-400">to</span>
+            <input type="date" name="end_date" value="{{ end_date|default:'' }}" required class="border border-slate-200 px-2 py-1 rounded-md text-slate-700 focus:outline-none focus:border-blue-500">
+            <button type="submit" class="bg-slate-900 text-white px-3 py-1 rounded-md uppercase tracking-wider hover:bg-slate-800 transition-colors">Run</button>
+        </form>
+    </div>
+</div>
+
+<div class="bg-white border border-blue-100/60 rounded-xl shadow-xs overflow-hidden text-xs">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-slate-50/50 border-b border-slate-200 text-[10px] font-bold uppercase text-slate-500">
-                    <th class="p-4 pl-6">Transaction Date</th>
-                    <th class="p-4">Reference No.</th>
-                    <th class="p-4 text-right">Amount Inward</th>
-                    <th class="p-4 text-center pr-6">Logged By</th>
+                <tr class="bg-slate-950 text-white uppercase text-[10px] tracking-wider font-black">
+                    <th class="p-4 pl-6 border-x border-slate-800">Transaction Date</th>
+                    <th class="p-4 border-x border-slate-800">Reference No.</th>
+                    <th class="p-4 border-x border-slate-800">Allocation Details</th>
+                    <th class="p-4 text-right border-x border-slate-800">Amount Value</th>
+                    <th class="p-4 text-center border-x border-slate-800 pr-6">Logged By</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                 {% for deposit in scheme.deposits.all %}
-                <tr class="hover:bg-slate-50/50 transition-colors">
-                    <td class="p-4 pl-6 font-mono text-slate-500">
-                        {{ deposit.date_created|date:"Y-m-d H:i"|default:deposit.timestamp }}
+                <tr class="hover:bg-blue-50/20 transition-colors {% if deposit.transaction_type == 'RELEASE' %}bg-rose-50/20{% endif %}">
+                    
+                    <td class="p-4 pl-6 font-mono text-slate-500 border-x border-slate-100">
+                        {{ deposit.deposited_at|date:"Y-m-d H:i" }}
                     </td>
-                    <td class="p-4 font-mono font-bold text-slate-900 uppercase">
-                        {{ deposit.receipt_no|default:deposit.id }}
+                    
+                    <td class="p-4 font-mono font-bold text-slate-900 uppercase border-x border-slate-100">
+                        {{ deposit.receipt_number }}
                     </td>
-                    <td class="p-4 text-right font-black text-emerald-600 font-mono">
-                        + UGX {{ deposit.amount|intcomma }}
+
+                    <td class="p-4 border-x border-slate-100">
+                        {% if deposit.material_allocation %}
+                            <span class="text-slate-900 font-black uppercase">{{ deposit.material_allocation.name }}</span>
+                            <span class="text-[10px] text-slate-400 block font-normal">Material Disbursal Allocation</span>
+                        {% else %}
+                            <span class="text-slate-400 font-normal italic">General Cash Savings</span>
+                        {% endif %}
                     </td>
-                    <td class="p-4 text-center pr-6 text-slate-400 font-mono text-[11px]">
-                        {{ deposit.served_by.username|default:"System" }}
+                    
+                    <td class="p-4 text-right font-black font-mono border-x border-slate-100">
+                        {% if deposit.transaction_type == 'RELEASE' %}
+                            <span class="text-rose-600">- UGX {{ deposit.amount|intcomma }}</span>
+                        {% else %}
+                            <span class="text-emerald-600">+ UGX {{ deposit.amount|intcomma }}</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="p-4 text-center pr-6 text-slate-500 font-mono text-[11px] border-x border-slate-100">
+                        {{ deposit.served_by.username|default:"System Engine" }}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="text-center py-8 text-slate-400 font-bold uppercase bg-slate-50/10 tracking-wide">
+                    <td colspan="5" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-blue-50/10 border-x border-slate-100">
                         No financial transactions or deposits recorded on this ledger yet.
                     </td>
                 </tr>

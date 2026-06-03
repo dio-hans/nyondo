@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-
 {% load humanize %}
 
 {% block title %}Inventory Executive Terminal | Nyondo Hardware{% endblock %}
@@ -7,79 +6,109 @@
 {% block content %}
 <div class="max-w-7xl mx-auto my-8 px-4 space-y-6">
 
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 gap-2">
+    <!-- 1. TERMINAL HEADER BLOCK -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-slate-950 text-white rounded-xl p-6 border border-slate-800 shadow-sm gap-4">
         <div>
-            <h1 class="text-sm font-black text-slate-900 uppercase tracking-wider">
+            <h1 class="text-sm font-black uppercase tracking-widest text-blue-400">
                 System Management Dashboard
             </h1>
-            <p class="text-xs text-slate-400 font-medium mt-0.5">Real-time valuation summaries, velocity tracking calculations, and supply pipelines.</p>
+            <p class="text-xs text-slate-400 font-medium mt-1">
+                Real-time valuation summaries, velocity tracking calculations, and supply pipelines.
+            </p>
         </div>
-        <div class="text-right font-mono text-[11px] text-slate-400">
-            Active Session Context: Manager Mode
+        <div class="self-start sm:self-center bg-slate-900 border border-slate-800 rounded-md px-3 py-1.5 font-mono text-[10px] text-slate-300 uppercase tracking-wider">
+            Active Session Context: <span class="text-emerald-400 font-bold">Manager Mode</span>
         </div>
     </div>
 
+    <!-- 2. ADMINISTRATIVE CONTROL PANEL -->
     {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
-    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+    <div class="bg-blue-50/40 border border-blue-100/70 rounded-xl p-5 shadow-xs">
         <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">
             Administrative Control Operations
         </h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             
-            <a href="{% url 'product_list' %}" class="bg-white border border-slate-200 hover:border-slate-300 p-3 rounded-lg text-center transition-all group shadow-sm">
-                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600">
+            <!-- Product Registry -->
+            <a href="{% url 'product_list' %}" class="bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 p-3 rounded-lg text-center transition-all group shadow-xs">
+                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600 transition-colors">
                     Product Registry
                 </span>
                 <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Master balances</span>
             </a>
 
-            <a href="{% url 'product_create' %}" class="bg-white border border-slate-200 hover:border-slate-300 p-3 rounded-lg text-center transition-all group shadow-sm">
-                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600">
+            <!-- Catalog SKU -->
+            <a href="{% url 'product_create' %}" class="bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 p-3 rounded-lg text-center transition-all group shadow-xs">
+                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600 transition-colors">
                     Catalog SKU
                 </span>
                 <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Add item profiles</span>
             </a>
 
-            <a href="{% url 'stock_movement' %}" class="bg-white border border-slate-200 hover:border-slate-300 p-3 rounded-lg text-center transition-all group shadow-sm">
-                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600">
+            <!-- Movement Logs -->
+            <a href="{% url 'stock_movement' %}" class="bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 p-3 rounded-lg text-center transition-all group shadow-xs">
+                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600 transition-colors">
                     Movement Logs
                 </span>
                 <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Audit track logs</span>
             </a>
 
-            <a href="{% url 'procurement:supplier_registration' %}" class="bg-white border border-slate-200 hover:border-slate-300 p-3 rounded-lg text-center transition-all group shadow-sm">
-                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600">
+            <!-- Onboard Vendor -->
+            <a href="{% url 'procurement:supplier_registration' %}" class="bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 p-3 rounded-lg text-center transition-all group shadow-xs">
+                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600 transition-colors">
                     Onboard Vendor
                 </span>
                 <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Supplier matrix</span>
             </a>
 
-            <a href="{% url 'procurement:supplier_debt_list' %}" class="bg-white border border-slate-200 hover:border-slate-300 p-3 rounded-lg text-center transition-all group shadow-sm col-span-2 sm:col-span-1">
-    <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600">
-        Debt Ledger
-    </span>
-    <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Procurement credit</span>
-</a>
+            <!-- Debt Ledger -->
+            <a href="{% url 'procurement:supplier_debt_list' %}" class="bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 p-3 rounded-lg text-center transition-all group shadow-xs col-span-2 sm:col-span-1">
+                <span class="block text-xs font-black text-slate-800 uppercase tracking-wide group-hover:text-blue-600 transition-colors">
+                    Debt Ledger
+                </span>
+                <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Procurement credit</span>
+            </a>
 
         </div>
     </div>
     {% endif %}
 
-   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
-        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Capital Asset Investment</span>
-        <span class="text-lg font-black text-slate-900 mt-1 block">UGX {{ stock_valuation|default:0|intcomma }}</span>
-    </div>
-    
-    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
-        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Expected Margin Yield</span>
-        <span class="text-lg font-black text-emerald-600 mt-1 block">UGX {{ estimated_profit|default:0|intcomma }}</span>
-    </div>
-    
+    <!-- 3. FINANCIAL & INVENTORY METRICS MATRIX (DARK TERMINAL STYLE) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Capital Asset Valuation Card -->
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 shadow-sm relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest block">
+                Capital Asset Investment
+            </span>
+            <span class="text-xl font-black text-white font-mono tracking-tight mt-2 block">
+                UGX {{ stock_valuation|default:0|floatformat:0|intcomma }}
+            </span>
+            <span class="text-[10px] text-slate-400 font-medium mt-1 block">
+                Total compound warehouse cost
+            </span>
+        </div>
+        
+        <!-- Expected Margin Yield Card -->
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 shadow-sm relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest block">
+                Expected Margin Yield
+            </span>
+            <span class="text-xl font-black text-emerald-400 font-mono tracking-tight mt-2 block">
+                UGX {{ estimated_profit|default:0|floatformat:0|intcomma }}
+            </span>
+            <span class="text-[10px] text-slate-400 font-medium mt-1 block">
+                Projected retail profit overhead
+            </span>
+        </div>
+
     </div>
 
+    <!-- 4. ANALYTICS GRID WRAPPER -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        </div>
+    </div>
 
 </div>
 {% endblock %}

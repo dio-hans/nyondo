@@ -17,30 +17,34 @@
         </div>
     </div>
 
-
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Capital Asset Investment</span>
-            <span class="text-lg font-black text-slate-900 mt-1 block">UGX {{ total_stock_value|default:"0" }}</span>
+        
+        <div class="bg-blue-50/80 border border-blue-200/70 p-5 rounded-xl shadow-xs">
+            <span class="text-[10px] font-black text-blue-800 uppercase tracking-wider block">Capital Asset Investment</span>
+            <span class="text-lg font-black text-slate-900 mt-1 block font-mono">UGX {{ total_stock_value|default:"0" }}</span>
         </div>
-        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Expected Margin Yield</span>
-            <span class="text-lg font-black text-emerald-600 mt-1 block">UGX {{ expected_profit|default:"0" }}</span>
+        
+        <div class="bg-blue-50/80 border border-blue-200/70 p-5 rounded-xl shadow-xs">
+            <span class="text-[10px] font-black text-blue-800 uppercase tracking-wider block">Expected Margin Yield</span>
+            <span class="text-lg font-black text-emerald-600 mt-1 block font-mono">UGX {{ expected_profit|default:"0" }}</span>
         </div>
-        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Active Monitored SKUs</span>
-            <span class="text-lg font-black text-slate-900 mt-1 block">{{ total_products }}</span>
+        
+        <div class="bg-blue-50/80 border border-blue-200/70 p-5 rounded-xl shadow-xs">
+            <span class="text-[10px] font-black text-blue-800 uppercase tracking-wider block">Active Monitored SKUs</span>
+            <span class="text-lg font-black text-slate-900 mt-1 block font-mono">{{ total_products }}</span>
         </div>
-        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Depleted Reorder Hazards</span>
-            <span class="text-lg font-black {% if low_stock_products.count > 0 %}text-rose-600{% else %}text-slate-900{% endif %} mt-1 block">
+        
+        <div class="bg-blue-50/80 border border-blue-200/70 p-5 rounded-xl shadow-xs">
+            <span class="text-[10px] font-black text-blue-800 uppercase tracking-wider block">Depleted Reorder Hazards</span>
+            <span class="text-lg font-black {% if low_stock_products.count > 0 %}text-rose-600{% else %}text-slate-900{% endif %} mt-1 block font-mono">
                 {{ low_stock_products.count }} Items
             </span>
         </div>
+        
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    </div>
+        </div>
 
 </div>
 {% endblock %}

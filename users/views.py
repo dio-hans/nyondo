@@ -91,7 +91,6 @@ def register_user(request):
 
     return render(request, 'users/register.html', {'form': form})
 
-@user_passes_test(can_manage_staff, login_url='user_login', redirect_field_name=None)
 def toggle_user_status(request, user_id):
     """Soft deactivation feature to handle account locks safely"""
     employee = get_object_or_404(User, id=user_id)
@@ -106,5 +105,3 @@ def toggle_user_status(request, user_id):
     status = "activated" if employee.is_active else "suspended"
     messages.success(request, f"Account access for {employee.username} has been {status}.")
     return redirect('user_list')
-
-

@@ -4,20 +4,20 @@
 {% block title %}Supplier Debt Ledger | Nyondo Hardware{% endblock %}
 
 {% block content %}
-<!-- Header Context Block -->
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
         <h1 class="text-xl font-black text-slate-900 uppercase tracking-tight">Accounts Payable & Debt Ledger</h1>
         <p class="text-xs text-slate-500 font-medium mt-0.5">Active procurement credit liabilities and settlement tracking.</p>
     </div>
     <div class="flex items-center gap-4 self-start sm:self-center">
-        <a href="{% url 'inventory_dashboard' %}" class="text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 tracking-wider flex items-center gap-1 transition-colors">
-            Back to dashboard
+        {% load nav_helpers %}  
+        <a href="{% get_dashboard_url request.user %}" 
+        class="text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 tracking-wider flex items-center gap-1 transition-colors">
+            ← Back to dashboard
         </a>
     </div>
 </div>
 
-<!-- Financial Summary Cards -->
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
     <div class="bg-blue-50/30 border border-blue-100/60 p-5 rounded-xl shadow-xs">
         <span class="text-[10px] font-black text-blue-500 block uppercase tracking-wider">Total Outstanding Credit</span>
@@ -39,12 +39,25 @@
     </div>
 </div>
 
-<!-- Ledger Data Sheet -->
+<div class="flex flex-col lg:flex-row lg:items-center gap-4 p-4 mb-6 bg-slate-50 rounded-xl border border-slate-200/60">
+    <div class="flex items-center gap-1.5 text-[11px] font-bold flex-wrap">
+        <a href="?preset=today" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-colors {% if request.GET.preset == 'today' %}bg-blue-600 border-blue-600 text-white hover:bg-blue-700{% endif %}">Today</a>
+        <a href="?preset=yesterday" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-colors {% if request.GET.preset == 'yesterday' %}bg-blue-600 border-blue-600 text-white hover:bg-blue-700{% endif %}">Yesterday</a>
+        <a href="?preset=this_month" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-colors {% if request.GET.preset == 'this_month' or not request.GET.preset and not request.GET.start_date %}bg-blue-600 border-blue-600 text-white hover:bg-blue-700{% endif %}">This Month</a>
+    </div>
+    
+    <form method="GET" class="flex flex-wrap items-center gap-2 text-[11px] font-bold sm:ml-auto lg:ml-auto">
+        <input type="date" name="start_date" value="{{ start_date|default:'' }}" required class="border border-slate-200 px-2 py-1.5 rounded-lg text-slate-700 bg-white focus:outline-none focus:border-blue-500 font-mono">
+        <span class="text-slate-400 lowercase font-medium">to</span>
+        <input type="date" name="end_date" value="{{ end_date|default:'' }}" required class="border border-slate-200 px-2 py-1.5 rounded-lg text-slate-700 bg-white focus:outline-none focus:border-blue-500 font-mono">
+        <button type="submit" class="bg-slate-900 text-white px-4 py-1.5 rounded-lg uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer">Run</button>
+    </form>
+</div>
+
 <div class="bg-white border border-blue-100/60 rounded-xl shadow-xs overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-xs">
             <thead>
-                <!-- UPDATED: Black row background with dark, subtle column lines (border-x border-slate-800) -->
                 <tr class="bg-slate-950 border-b border-slate-900 text-[10px] font-black uppercase tracking-wider text-white">
                     <th class="p-4 pl-6 border-x border-slate-800">Vendor Company / Contact</th>
                     <th class="p-4 text-right border-x border-slate-800">Total Invoiced</th>
@@ -58,28 +71,23 @@
                 {% for supplier in debtors %}
                 <tr class="hover:bg-blue-50/20 transition-colors">
                     
-                    <!-- Vendor Profile (With soft border-x right side line) -->
                     <td class="p-4 pl-6 border-x border-slate-100">
                         <p class="font-black text-slate-900 text-sm uppercase leading-tight">{{ supplier.name }}</p>
-                        <p class="text-[10px] text-slate-400 font-medium mt-0.5">Phone: {{ supplier.phone|default:"No phone profile" }}</p>
+                        <p class="text-[10px] text-slate-400 font-medium mt-0.5">Phone: {{ supplier.phone_number|default:"No phone profile" }}</p>
                     </td>
                     
-                    <!-- Total Procurement Value -->
                     <td class="p-4 text-right font-bold text-slate-400 font-mono whitespace-nowrap border-x border-slate-100">
                         UGX {{ supplier.total_owed|default:"0"|intcomma }}
                     </td>
                     
-                    <!-- Paid Up Till Date -->
                     <td class="p-4 text-right font-bold text-emerald-600 font-mono whitespace-nowrap border-x border-slate-100">
                         UGX {{ supplier.total_paid|default:"0"|intcomma }}
                     </td>
                     
-                    <!-- Remaining Unpaid Balance Owed -->
                     <td class="p-4 text-right font-black text-slate-900 font-mono whitespace-nowrap text-sm bg-blue-50/10 border-x border-slate-100">
                         UGX {{ supplier.remaining_balance|default:"0"|intcomma }}
                     </td>
                     
-                    <!-- Status Indicators -->
                     <td class="p-4 text-center whitespace-nowrap border-x border-slate-100">
                         {% if supplier.remaining_balance > 1000000 %}
                             <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200 rounded">
@@ -92,7 +100,6 @@
                         {% endif %}
                     </td>
                     
-                    <!-- Operation Control Keys -->
                     <td class="p-4 text-center whitespace-nowrap border-x border-slate-100">
                         <div class="flex items-center justify-center gap-3">
                             <a href="#" class="bg-white border border-slate-200 hover:border-blue-400 text-slate-700 hover:text-blue-600 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition-all shadow-xs">
@@ -104,7 +111,7 @@
                                 {% csrf_token %}
                                 <input type="number" name="amount_paid" max="{{ supplier.remaining_balance }}" placeholder="Amount" required 
                                        class="w-20 px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-semibold outline-none focus:border-blue-400">
-                                <button type="submit" class="bg-rose-600 text-white px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider hover:bg-rose-700 transition-colors">
+                                <button type="submit" class="bg-rose-600 text-white px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider hover:bg-rose-700 transition-colors cursor-pointer">
                                     Pay
                                 </button>
                             </form>
@@ -113,7 +120,6 @@
                     </td>
                 </tr>
                 {% empty %}
-                <!-- Empty State -->
                 <tr>
                     <td colspan="6" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-blue-50/10">
                         No outstanding supplier debts found in system registry matrix.

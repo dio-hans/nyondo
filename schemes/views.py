@@ -8,19 +8,15 @@ from schemes.models import SavingsScheme
 from sales.models import Customer
 from inventory.models import Product
 from .models import SchemeDeposit
+from reports.decorators import role_required
 
 
 # ROLE PROTECTION HELPER FUNCTIONS
 
-def is_sales_or_higher(user):
-    """Allows Sales Attendants, Store Managers, and Admins to run ledger actions."""
-    return user.is_authenticated and (user.role in ['SALES', 'MANAGER', 'ADMIN'] or user.is_superuser)
-
-
 # CORE SAVINGS SCHEME LOGIC
 
 @login_required
-@user_passes_test(is_sales_or_higher, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN', 'SALES'])
 def enroll_customer(request):
     if request.method == 'POST':
         customer_name_input = request.POST.get('customer_name', '').strip()
@@ -101,7 +97,7 @@ def enroll_customer(request):
 
 
 @login_required
-@user_passes_test(is_sales_or_higher, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN', 'SALES'])
 def record_deposit(request, customer_id=None):
     scheme = None
     if customer_id:
@@ -158,6 +154,7 @@ def record_deposit(request, customer_id=None):
 
 
 @login_required
+@role_required(['ADMIN', 'SALES'])
 def view_receipt(request, deposit_id):
     deposit = get_object_or_404(SchemeDeposit, id=deposit_id)
     scheme = deposit.scheme
@@ -173,6 +170,7 @@ def view_receipt(request, deposit_id):
 
 
 @login_required
+@role_required(['ADMIN', 'SALES'])
 def customer_detail(request, customer_id):
     scheme = get_object_or_404(SavingsScheme, id=customer_id)
     deposits = SchemeDeposit.objects.filter(scheme=scheme).order_by('-deposited_at')
@@ -186,6 +184,7 @@ def customer_detail(request, customer_id):
 
 
 @login_required
+@role_required(['ADMIN', 'SALES'])
 def schemes_list(request):
     active_schemes = SavingsScheme.objects.all().select_related('customer')
     return render(request, 'schemes/schemes_list.html', {'schemes': active_schemes})

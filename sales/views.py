@@ -8,12 +8,12 @@ from inventory.models import Product, StockMovement
 from .models import SalesOrder, SalesOrderItem, Customer, Receipt
 import json
 from schemes.models import SavingsScheme
+from django.contrib.auth.decorators import login_required
+from reports.decorators import role_required
 
 
-from django.shortcuts import redirect, get_object_or_404
-
-
-
+@login_required
+@role_required(allowed_roles=['SALES'])
 def make_sale(request, scheme_id=None):
     """ The Tile Grid Registry Terminal Workspace """
     customers = Customer.objects.all().order_by('name')
@@ -31,15 +31,9 @@ def make_sale(request, scheme_id=None):
     }
     return render(request, 'sales/make_sale.html', context)
 
-
-import json
-from decimal import Decimal
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.db import transaction
-from django.utils import timezone
 # Ensure you import your models properly here (Customer, Product, SavingsScheme, SalesOrder, SalesOrderItem, StockMovement, Receipt)
-
+@login_required
+@role_required(allowed_roles=['SALES'])
 def review_checkout(request):
     """ Intermediate Confirmation Step to compute transport rules and commit """
     if request.method != 'POST':
@@ -217,6 +211,8 @@ def sale_history(request):
     }
     return render(request, 'sales/history.html', context)
 
+@login_required
+@role_required(allowed_roles=['SALES', 'ADMIN'])
 def order_queue_dashboard(request):
     """ Displays all open orders waiting for cashier payment clearance """
     # Fetch orders where status is PENDING or waiting to be cleared
@@ -227,7 +223,8 @@ def order_queue_dashboard(request):
     }
     return render(request, 'sales/order_queue.html', context)
 
-
+@login_required
+@role_required(allowed_roles=['SALES'])
 def process_queue_clearance(request, order_id):
     """
     Processes and clears a pending queue ticket order, transitioning 
@@ -239,7 +236,7 @@ def process_queue_clearance(request, order_id):
     # 2. Safety Check: Only process if it isn't already completed
     if order.status == 'COMPLETED':
         messages.warning(request, f"Order #{order.id} has already been cleared and processed.")
-        return redirect('sales:queue_list')  # Adjust to your actual queue list redirect name
+        return redirect('order_queue')  # Adjust to your actual queue list redirect name
         
     try:
         # 3. Transition the status and log who cleared the ticket
@@ -257,7 +254,8 @@ def process_queue_clearance(request, order_id):
     # 5. Redirect back to the pending queue panel deck layout
     return redirect('order_queue')  # Change this to match the URL name of your active checkout queue page
 
-
+@login_required
+@role_required(allowed_roles=['SALES'])
 def checkout_collection_detail(request, order_id):
     """
     Renders the itemized verification sheet for a pending orders.
@@ -276,7 +274,7 @@ def checkout_collection_detail(request, order_id):
     return render(request, 'sales/checkout_collection_detail.html', context)
 
 
-def checkout_collection_detail(request, order_id):
+# def checkout_collection_detail(request, order_id):
     # 1. Fetch the exact order using the ID from the URL
     order = get_object_or_404(SalesOrder, id=order_id)
     
@@ -298,7 +296,8 @@ def checkout_collection_detail(request, order_id):
     }
     return render(request, 'sales/checkout_collection_detail.html', context)
 
-
+@login_required
+@role_required(allowed_roles=['SALES'])
 def invoice_detail_receipt(request, order_id):
     """
     Renders the clean, customer-facing retail invoice layout designed 

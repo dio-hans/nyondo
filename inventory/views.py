@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
@@ -7,16 +9,19 @@ from procurement.models import PurchaseItem, Supplier
 
 from .models import Product, StockMovement, Category, AuditLog
 from procurement.models import PurchaseOrder 
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
+from reports.decorators import role_required
 
 
 @login_required
+@role_required(['MANAGER', 'ADMIN', 'SALES'])
 def product_list(request):
     products = Product.objects.all().order_by('current_stock')
     context = {'products': products}
     return render(request, 'product_list.html', context)
 
 @login_required
+@role_required(['MANAGER'])
 def inventory_dashboard(request):
     products = Product.objects.all()
     for product in products:
@@ -45,6 +50,7 @@ def inventory_dashboard(request):
     return render(request, 'dashboard.html', context)
 
 @login_required
+@role_required(['MANAGER'])
 def product_save(request, product_id=None):
     """
     Enables store managers to correct historical manual entry mistakes,
@@ -105,6 +111,7 @@ def product_save(request, product_id=None):
     return render(request, 'inventory/product_form.html', context)
 
 @login_required
+@role_required(['MANAGER'])
 def product_create(request):
     """
     Unified Inbound Flow: Handles standard cash restocks, brand new inventory registrations, 
@@ -241,6 +248,7 @@ def product_create(request):
 
 
 @login_required
+@role_required(['MANAGER', 'ADMIN'])
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     stock_movements = StockMovement.objects.filter(product=product).order_by('-created_at')
@@ -261,20 +269,43 @@ def product_detail(request, product_id):
     return render(request, 'inventory/product_detail.html', context)
 
 @login_required
+@role_required(['MANAGER', 'ADMIN'])
 def stock_movement_history(request):
     """
-    Renders a master audit trail of all warehouse item fluctuations
+    Renders a filtered master audit trail of all warehouse item fluctuations
     """
-    # Simply fetch every movement row without checking roles or log status
-    movements = StockMovement.objects.all().select_related('product').order_by('-created_at')
+    # Start with all records
+    movements = StockMovement.objects.select_related('product').order_by('-created_at')
+    
+    # Get filters from URL
+    preset = request.GET.get('preset')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    today = timezone.now().date()
+
+    # Apply Logic
+    if preset == 'today':
+        movements = movements.filter(created_at__date=today)
+    elif preset == 'yesterday':
+        yesterday = today - timedelta(days=1)
+        movements = movements.filter(created_at__date=yesterday)
+    elif preset == 'this_month':
+        movements = movements.filter(created_at__year=today.year, created_at__month=today.month)
+    elif start_date and end_date:
+        # User-defined custom range
+        movements = movements.filter(created_at__date__range=[start_date, end_date])
 
     context = {
-        'movements': movements
+        'movements': movements,
+        'start_date': start_date,
+        'end_date': end_date
     }
     return render(request, 'stock_movement.html', context)
 
 # inventory/views.py
 @login_required
+@role_required(['MANAGER'])
 def supplier_create(request):
 
     if request.method == "POST":

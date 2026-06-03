@@ -1,26 +1,25 @@
+from datetime import timedelta
+import datetime
+from django.utils import timezone
 from decimal import Decimal
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
 
-from django.db.models import Sum
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Q, Sum
+from django.contrib.auth.decorators import login_required
 
 from .forms import UnifiedPurchaseForm
 from .models import PurchaseOrder, PurchaseItem, Supplier
 from inventory.models import Product, StockMovement
+from reports.decorators import role_required
 
 
 # ROLE PROTECTION HELPER FUNCTIONS
 
-def is_admin_or_manager(user):
-    """Allows Accounts/Admin and Store Managers to manage supply operations."""
-    return user.is_authenticated and (user.role in ['ADMIN', 'MANAGER'] or user.is_superuser)
-
-# CORE PROCUREMENTS FUNCTIONALITIES
-
 @login_required
+@role_required(['ADMIN', 'MANAGER'])
 def record_purchase(request):
     suppliers = Supplier.objects.filter(is_active=True)
     products = Product.objects.all()
@@ -116,6 +115,7 @@ def record_purchase(request):
 
 
 @login_required
+@role_required(['MANAGER'])
 def receive_credit_stock(request):
     suppliers = Supplier.objects.filter(is_active=True)
     products = Product.objects.all()
@@ -128,6 +128,7 @@ def receive_credit_stock(request):
 
 
 @login_required
+@role_required(['MANAGER', 'ADMIN'])
 def procurement_dashboard(request):
     total_orders = PurchaseOrder.objects.count()
     total_spent = PurchaseOrder.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
@@ -152,10 +153,11 @@ def procurement_dashboard(request):
         'recent_orders': recent_orders,
         'recent_items': recent_items,
     }
-    return render(request, 'procurement/dashboard.html', context)
+    return render(request, 'procurement_dashboard.html', context)
 
 
 @login_required
+@role_required(['MANAGER', 'ADMIN'])
 def record_procurement_entry(request):
     if request.method == 'POST':
         form = UnifiedPurchaseForm(request.POST)
@@ -221,31 +223,64 @@ def record_procurement_entry(request):
         
     return render(request, 'procurement/record_purchase.html', {'form': form})
 
-@login_required()
+
+@login_required
+@role_required(['MANAGER', 'ADMIN', 'SALES'])
 def supplier_debt_list(request):
     debtors = []
     total_global_debt = 0
 
-    # 1. Pull all active suppliers
+    # 1. Capture incoming date range parameters from the URL query strings
+    preset = request.GET.get('preset')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    today = timezone.now().date()
+    start_date = None
+    end_date = None
+
+    # 2. Compute date boundaries based on selected presets
+    if preset == 'today':
+        start_date = today
+        end_date = today
+    elif preset == 'yesterday':
+        start_date = today - timedelta(days=1)
+        end_date = today - timedelta(days=1)
+    elif preset == 'this_month' or (not preset and not start_date_str):
+        # Default behavior: fallback automatically to current month scope
+        start_date = today.replace(day=1)
+        end_date = today
+    elif start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            start_date = today.replace(day=1)
+            end_date = today
+
+    # 3. Pull active suppliers
     suppliers = Supplier.objects.filter(is_active=True)
 
     for supplier in suppliers:
-        # 2. Get the total cost of all orders from this supplier
-        total_owed = PurchaseOrder.objects.filter(supplier=supplier).aggregate(
-            total=Sum('total_amount')
-        )['total'] or 0
+        # Construct target filter map for this supplier's orders
+        po_filter = Q(supplier=supplier)
         
-        # 3. Sum up what you have paid them directly from the purchase orders
-        total_paid = PurchaseOrder.objects.filter(supplier=supplier).aggregate(
-            total=Sum('amount_paid')
-        )['total'] or 0
+        # Apply date boundary filtering if limits are set
+        if start_date and end_date:
+            po_filter &= Q(created_at__date__range=(start_date, end_date))
 
-        # 4. Use your model's stored outstanding balance field
-        remaining_balance = PurchaseOrder.objects.filter(supplier=supplier).aggregate(
-            total=Sum('balance')
-        )['total'] or 0
+        # 4. Aggregate procurement cost balances within the chosen time frame
+        metrics = PurchaseOrder.objects.filter(po_filter).aggregate(
+            total_owed=Sum('total_amount'),
+            total_paid=Sum('amount_paid'),
+            remaining_balance=Sum('balance')
+        )
 
-        # 5. Build our ledger array dynamically if there's an outstanding balance
+        total_owed = metrics['total_owed'] or 0
+        total_paid = metrics['total_paid'] or 0
+        remaining_balance = metrics['remaining_balance'] or 0
+
+        # 5. Compile ledger row if there's an active liability balance in this window
         if remaining_balance > 0:
             supplier.total_owed = total_owed
             supplier.total_paid = total_paid
@@ -254,15 +289,18 @@ def supplier_debt_list(request):
             debtors.append(supplier)
             total_global_debt += remaining_balance
 
+    # 6. Return populated parameters back to template context variables
     context = {
         'debtors': debtors,
         'total_global_debt': total_global_debt,
         'next_due_date': None,
+        'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+        'end_date': end_date.strftime('%Y-%m-%d') if end_date else '',
     }
     
     return render(request, 'procurement/supplier_debt_list.html', context)
-
 @login_required
+@role_required(['SALES'])
 def clear_supplier_credit(request, debt_id):
     if request.method == "POST":
         purchase_order = get_object_or_404(PurchaseOrder, id=debt_id)

@@ -3,31 +3,104 @@
 {% block title %}Log Business Expense | Nyondo Hardware{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto my-10">
-    <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-8">
-        <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider mb-6">
-            Log New Business Expense
-        </h2>
+<div class="max-w-md mx-auto my-12 px-4">
+    <!-- Back Navigation Link -->
+    <div class="mb-4">
+        <a href="{% url 'record_sale' %}" class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors uppercase tracking-wider">
+            ✕ Cancel & Return
+        </a>
+    </div>
+
+    <!-- Main Form Card -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="p-6 bg-slate-950 text-white border-b border-slate-800">
+            <h2 class="text-xs font-black uppercase tracking-wider">
+                Log New Business Expense
+            </h2>
+            <p class="text-[11px] text-slate-400 font-medium mt-1">Record real-time cash outflows and operational debits.</p>
+        </div>
         
-        <form method="POST" class="space-y-4">
+        <form method="POST" class="p-6 space-y-5">
             {% csrf_token %}
             
-            {% for field in form %}
-                <div class="flex flex-col gap-2">
-                    <label class="text-[10px] font-black text-slate-500 uppercase">{{ field.label }}</label>
-                    <!-- I added 'form-control' or classes here to ensure they are clickable -->
-                    <div class="w-full">
-                        {{ field }}
-                    </div>
-                    {% if field.errors %}
-                        <p class="text-xs text-red-500">{{ field.errors.0 }}</p>
-                    {% endif %}
+            <!-- Global non-field errors if any exist -->
+            {% if form.non_field_errors %}
+                <div class="p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg text-xs font-medium">
+                    {{ form.non_field_errors.0 }}
                 </div>
-            {% endfor %}
-            
-            <button type="submit" class="w-full bg-slate-900 text-white py-3 rounded-lg font-black uppercase text-[11px] hover:bg-rose-700 transition-colors mt-4">
-                Confirm & Log Expense
-            </button>
+            {% endif %}
+
+            <!-- 1. EXPENSE CATEGORY (Select Dropdown) -->
+            <div class="flex flex-col gap-1.5">
+                <label for="{{ form.category.id_for_label }}" class="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                    Expense Category
+                </label>
+                <div class="relative w-full">
+                    <select name="{{ form.category.html_name }}" id="{{ form.category.auto_id }}" required
+                        class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-3 py-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-transparent transition-all appearance-none cursor-pointer">
+                        {% for choice in form.category.field.choices %}
+                            <option value="{{ choice.0 }}" {% if form.category.value == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    <!-- Custom Arrow Indicator -->
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                </div>
+                {% if form.category.errors %}
+                    <p class="text-[11px] text-red-500 font-bold mt-1">{{ form.category.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- 2. AMOUNT VALUE (With Styled Currency Prefix Badge) -->
+            <div class="flex flex-col gap-1.5">
+                <label for="{{ form.amount.id_for_label }}" class="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                    Amount Value
+                </label>
+                <div class="relative rounded-lg shadow-xs w-full">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <span class="text-slate-400 font-mono text-[11px] font-bold tracking-tight">UGX</span>
+                    </div>
+                    <input type="number" name="{{ form.amount.html_name }}" id="{{ form.amount.auto_id }}" 
+                        value="{{ form.amount.value|default:'' }}" placeholder="0" required min="0" step="any"
+                        class="pl-12 w-full bg-slate-50 border border-slate-200 text-slate-900 font-mono font-bold rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-transparent transition-all">
+                </div>
+                {% if form.amount.errors %}
+                    <p class="text-[11px] text-red-500 font-bold mt-1">{{ form.amount.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- 3. TRANSACTION DATE -->
+            <div class="flex flex-col gap-1.5">
+                <label for="{{ form.date_incurred.id_for_label }}" class="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                    Date Incurred
+                </label>
+                <input type="date" name="{{ form.date_incurred.html_name }}" id="{{ form.date_incurred.auto_id }}"
+                    value="{{ form.date_incurred.value|date:'Y-m-d'|default:'' }}" required
+                    class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-medium rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-transparent transition-all">
+                {% if form.date_incurred.errors %}
+                    <p class="text-[11px] text-red-500 font-bold mt-1">{{ form.date_incurred.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- 4. DESCRIPTION / PURPOSE -->
+            <div class="flex flex-col gap-1.5">
+                <label for="{{ form.description.id_for_label }}" class="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                    Purpose / Notes
+                </label>
+                <textarea name="{{ form.description.html_name }}" id="{{ form.description.auto_id }}" rows="3" placeholder="Specify itemized purchases, utilities, or supplier payouts..." required
+                    class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg p-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-transparent transition-all resize-none">{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}
+                    <p class="text-[11px] text-red-500 font-bold mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Submission Action Trigger -->
+            <div class="pt-2">
+                <button type="submit" class="w-full bg-slate-950 text-white py-3 rounded-lg font-black uppercase text-[11px] tracking-wider hover:bg-rose-700 transition-colors shadow-xs">
+                    Confirm & Log Expense
+                </button>
+            </div>
         </form>
     </div>
 </div>

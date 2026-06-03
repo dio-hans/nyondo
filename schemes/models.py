@@ -50,18 +50,24 @@ class SchemeProduct(models.Model):
 
 
 class SchemeDeposit(models.Model):
-    scheme = models.ForeignKey(SavingsScheme, on_delete=models.CASCADE)
+    TRANSACTION_TYPES = [
+        ('DEPOSIT', 'Cash Deposit (+)'),
+        ('RELEASE', 'Goods Released (-)'),
+    ]
+    scheme = models.ForeignKey(SavingsScheme, on_delete=models.CASCADE, related_name='deposits')
     amount = models.IntegerField()
     deposited_at = models.DateTimeField(auto_now_add=True)
     receipt_number = models.CharField(max_length=50, unique=True)
     material_allocation = models.ForeignKey('inventory.Product', on_delete=models.PROTECT, null=True, blank=True)
-
+    logged_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES, default='DEPOSIT')
+    
     def __str__(self):
         return self.receipt_number
 
 
 class SchemeWithdrawal(models.Model):
-    scheme = models.ForeignKey(SavingsScheme, on_delete=models.CASCADE)
+    scheme = models.ForeignKey(SavingsScheme, on_delete=models.CASCADE, related_name='withdrawals')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     picked_at = models.DateTimeField(auto_now_add=True)

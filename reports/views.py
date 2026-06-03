@@ -7,9 +7,11 @@ from django.db.models import (
     DecimalField,
     ExpressionWrapper)
 from .forms import ExpenseForm
+from django.db.models import Q
 from django.utils import timezone
-from datetime import timedelta
-from django.contrib.auth.decorators import login_required, user_passes_test
+from datetime import timedelta, datetime
+
+from django.contrib.auth.decorators import login_required
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 
@@ -18,16 +20,11 @@ from procurement.models import PurchaseOrder
 from inventory.models import Product, StockMovement 
 from schemes.models import SavingsScheme
 from .models import Expense
+from reports.decorators import role_required
 
 
 User = get_user_model()
 
-
-# ROLE PROTECTION HELPER FUNCTIONS
-
-def is_admin_only(user):
-    """Restricts deep financial records and system dashboard metrics strictly to Accounts/Admin profiles."""
-    return user.is_authenticated and (user.role == 'ADMIN' or user.is_superuser)
 
 
 # DATE FILTER HELPER UTILITY
@@ -71,7 +68,7 @@ def apply_date_filters(request, sales_queryset, scheme_queryset=None):
 
 
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN'])
 def business_dashboard(request):
     """Polished Executive Control Panel providing unified financial telemetry and metrics."""
     completed_sales = SalesOrder.objects.filter(status='COMPLETED')
@@ -120,28 +117,63 @@ def business_dashboard(request):
         'estimated_profit': estimated_profit,                 # Match Card 3
     }
     return render(request, 'reports/admin_dashboard.html', context)
-
-
+    
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN', 'MANAGER', 'SALES'])
 def unpaid_supplier_view(request):
-    # FIXED: Using 'purchaseitem_set' to prefetch child rows and their respective products
-    unpaid_supplier_orders = PurchaseOrder.objects.filter(balance__gt=0)\
+    # 1. Capture incoming date range parameters from the request query strings
+    preset = request.GET.get('preset')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    today = timezone.now().date()
+    start_date = None
+    end_date = None
+
+    # 2. Compute date boundaries based on selected presets
+    if preset == 'today':
+        start_date = today
+        end_date = today
+    elif preset == 'yesterday':
+        start_date = today - timedelta(days=1)
+        end_date = today - timedelta(days=1)
+    elif preset == 'this_month' or (not preset and not start_date_str):
+        # Default behavior: fallback automatically to current month scope
+        start_date = today.replace(day=1)
+        end_date = today
+    elif start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            start_date = today.replace(day=1)
+            end_date = today
+
+    # 3. Build lookup filters sequentially 
+    filters = Q(balance__gt=0)
+    if start_date and end_date:
+        filters &= Q(created_at__date__range=(start_date, end_date))
+
+    # 4. Fetch optimized data matrix inside date constraints
+    unpaid_supplier_orders = PurchaseOrder.objects.filter(filters)\
         .select_related('supplier')\
         .prefetch_related('purchaseitem_set__product')\
         .order_by('-balance')
         
     supplier_debt = unpaid_supplier_orders.aggregate(total=Sum('balance'))['total'] or 0
 
+    # 5. Return parameters back to template context variables
     context = {
         'unpaid_supplier_orders': unpaid_supplier_orders,
-        'supplier_debt': supplier_debt
+        'supplier_debt': supplier_debt,
+        'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+        'end_date': end_date.strftime('%Y-%m-%d') if end_date else '',
     }
     return render(request, 'reports/unpaid_supplier.html', context)
 
 
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN'])
 def cashier_performance_view(request):
     sales = SalesOrder.objects.filter(status='COMPLETED')
     sales, _, today, start_date, end_date = apply_date_filters(request, sales)
@@ -161,7 +193,7 @@ def cashier_performance_view(request):
 
 
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN', 'MANAGER'])
 def stock_history_view(request):
     recent_stock_movements = StockMovement.objects.all().select_related('product').order_by('-created_at')
     low_stock_items = Product.objects.filter(current_stock__lte=F('reorder_level'))
@@ -174,7 +206,7 @@ def stock_history_view(request):
 
 
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN'])
 def highest_profit_view(request):
     sales = SalesOrder.objects.filter(status='COMPLETED')
     sales, _, today, start_date, end_date = apply_date_filters(request, sales)
@@ -200,7 +232,7 @@ def highest_profit_view(request):
 
 
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN'])
 def least_selling_view(request):
     sales = SalesOrder.objects.filter(status='COMPLETED')
     sales, _, today, start_date, end_date = apply_date_filters(request, sales)
@@ -221,7 +253,7 @@ def least_selling_view(request):
 
 
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN'])
 def transport_revenue_view(request):
     sales = SalesOrder.objects.filter(status='COMPLETED')
     sales, _, today, start_date, end_date = apply_date_filters(request, sales)
@@ -240,12 +272,12 @@ def transport_revenue_view(request):
 
 
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN'])
 def reports_index_view(request):
     return render(request, 'reports/reports_index.html')
 
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list', redirect_field_name=None)
+@role_required(['ADMIN'])
 def general_sales_report(request):
     sales = SalesOrder.objects.filter(status='COMPLETED')
     sales, _, today, start_date, end_date = apply_date_filters(request, sales)
@@ -271,6 +303,7 @@ def general_sales_report(request):
     return render(request, 'reports/general_sales.html', context)
 
 @login_required
+@role_required(['ADMIN', 'SALES'])
 def log_expense(request):
     if request.method == 'POST':
         form = ExpenseForm(request.POST)
@@ -279,7 +312,7 @@ def log_expense(request):
             expense.recorded_by = request.user
             expense.save()
             messages.success(request, "Expense successfully logged to the ledger.")
-            return redirect('financial_statement')
+            return redirect('record_sale')
     else:
         form = ExpenseForm()
     
@@ -288,7 +321,7 @@ def log_expense(request):
 # reports/views.py
 
 @login_required
-@user_passes_test(is_admin_only, login_url='product_list')
+@role_required(['ADMIN'])
 def financial_statement_view(request):
     # 1. Filter Sales
     sales = SalesOrder.objects.filter(status='COMPLETED')

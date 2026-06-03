@@ -7,7 +7,7 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <div class="bg-blue-50/30 border border-blue-100/60 rounded-xl shadow-xs p-6 md:col-span-2 flex flex-col justify-center">
         <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">
-            <i class="fa-solid fa-business-time text-rose-600 mr-1"></i> Outstanding Factory Credit Liabilities
+            Outstanding Factory Credit Liabilities
         </h2>
         <p class="text-xs text-slate-400 font-medium mt-1">Aging summary ledger representing unpaid materials inventory values.</p>
     </div>
@@ -18,6 +18,21 @@
             UGX {{ supplier_debt|intcomma }}
         </span>
     </div>
+</div>
+
+<div class="flex flex-col lg:flex-row lg:items-center gap-4 p-4 mb-4 bg-slate-50 rounded-xl border border-slate-200/60">
+    <div class="flex items-center gap-1.5 text-[11px] font-bold flex-wrap">
+        <a href="?preset=today" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-colors {% if request.GET.preset == 'today' %}bg-blue-600 border-blue-600 text-white hover:bg-blue-700{% endif %}">Today</a>
+        <a href="?preset=yesterday" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-colors {% if request.GET.preset == 'yesterday' %}bg-blue-600 border-blue-600 text-white hover:bg-blue-700{% endif %}">Yesterday</a>
+        <a href="?preset=this_month" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-colors {% if request.GET.preset == 'this_month' or not request.GET.preset and not request.GET.start_date %}bg-blue-600 border-blue-600 text-white hover:bg-blue-700{% endif %}">This Month</a>
+    </div>
+    
+    <form method="GET" class="flex flex-wrap items-center gap-2 text-[11px] font-bold sm:ml-auto lg:ml-auto">
+        <input type="date" name="start_date" value="{{ start_date|default:'' }}" required class="border border-slate-200 px-2 py-1.5 rounded-lg text-slate-700 bg-white focus:outline-none focus:border-blue-500 font-mono">
+        <span class="text-slate-400 lowercase font-medium">to</span>
+        <input type="date" name="end_date" value="{{ end_date|default:'' }}" required class="border border-slate-200 px-2 py-1.5 rounded-lg text-slate-700 bg-white focus:outline-none focus:border-blue-500 font-mono">
+        <button type="submit" class="bg-slate-900 text-white px-4 py-1.5 rounded-lg uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer">Run</button>
+    </form>
 </div>
 
 <div class="bg-white border border-blue-100/60 rounded-xl shadow-xs overflow-hidden text-xs">
@@ -31,58 +46,58 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-    {% for purchase in unpaid_supplier_orders %}
-        {% for item in purchase.purchaseitem_set.all %}
-        <tr class="hover:bg-blue-50/20 transition-colors">
-            
-            <td class="p-4 pl-6 font-black text-slate-900 uppercase border-x border-slate-100/70">
-                {% if forloop.first %}
-                    {{ purchase.supplier.name }}
-                {% else %}
-                    <span class="text-slate-300 font-normal text-[10px] uppercase tracking-tight">↳ Continued</span>
-                {% endif %}
-            </td>
-            
-            <td class="p-4 text-slate-900 font-black uppercase border-x border-slate-100/70">
-                {{ item.product.name }}
-            </td>
-            
-            <td class="p-4 text-center text-slate-700 border-x border-slate-100/70 font-mono font-bold">
-                {{ item.quantity|intcomma }} pcs
-            </td>
-            
-            <td class="p-4 text-right pr-6 font-black text-rose-700 bg-blue-50/10 border-x border-slate-100/70 font-mono text-sm">
-                {% if forloop.first %}
-                    UGX {{ purchase.balance|intcomma }}
-                {% else %}
-                    <span class="text-slate-400 font-normal text-xs">—</span>
-                {% endif %}
-            </td>
-            
-        </tr>
-        {% empty %}
-        <tr class="hover:bg-blue-50/20 transition-colors">
-            <td class="p-4 pl-6 font-black text-slate-900 uppercase border-x border-slate-100/70">
-                {{ purchase.supplier.name }}
-            </td>
-            <td class="p-4 text-amber-600 font-semibold font-mono text-[10px] border-x border-slate-100/70 bg-amber-50/50">
-                <i class="fa-solid fa-triangle-exclamation mr-1"></i> No Items Linked
-            </td>
-            <td class="p-4 text-center text-slate-400 border-x border-slate-100/70">—</td>
-            <td class="p-4 text-right pr-6 font-black text-rose-700 bg-blue-50/10 border-x border-slate-100/70 font-mono text-sm">
-                UGX {{ purchase.balance|intcomma }}
-            </td>
-        </tr>
-        {% endfor %}
-    {% empty %}
-    <tr>
-        <td colspan="4" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-blue-50/10 border-x border-slate-100/70">
-            <i class="fa-solid fa-circle-check text-emerald-500 text-lg block mb-2"></i>
-            Excellent. All supplier credit balances stand fully settled.
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
+            {% for purchase in unpaid_supplier_orders %}
+                {% for item in purchase.purchaseitem_set.all %}
+                <tr class="hover:bg-blue-50/20 transition-colors">
+                    
+                    <td class="p-4 pl-6 font-black text-slate-900 uppercase border-x border-slate-100/70">
+                        {% if forloop.first %}
+                            {{ purchase.supplier.name }}
+                        {% else %}
+                            <span class="text-slate-300 font-normal text-[10px] uppercase tracking-tight">↳ Continued</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="p-4 text-slate-900 font-black uppercase border-x border-slate-100/70">
+                        {{ item.product.name }}
+                    </td>
+                    
+                    <td class="p-4 text-center text-slate-700 border-x border-slate-100/70 font-mono font-bold">
+                        {{ item.quantity|intcomma }} pcs
+                    </td>
+                    
+                    <td class="p-4 text-right pr-6 font-black text-rose-700 bg-blue-50/10 border-x border-slate-100/70 font-mono text-sm">
+                        {% if forloop.first %}
+                            UGX {{ purchase.balance|intcomma }}
+                        {% else %}
+                            <span class="text-slate-400 font-normal text-xs">—</span>
+                        {% endif %}
+                    </td>
+                    
+                </tr>
+                {% empty %}
+                <tr class="hover:bg-blue-50/20 transition-colors">
+                    <td class="p-4 pl-6 font-black text-slate-900 uppercase border-x border-slate-100/70">
+                        {{ purchase.supplier.name }}
+                    </td>
+                    <td class="p-4 text-amber-600 font-semibold font-mono text-[10px] border-x border-slate-100/70 bg-amber-50/50">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> No Items Linked
+                    </td>
+                    <td class="p-4 text-center text-slate-400 border-x border-slate-100/70">—</td>
+                    <td class="p-4 text-right pr-6 font-black text-rose-700 bg-blue-50/10 border-x border-slate-100/70 font-mono text-sm">
+                        UGX {{ purchase.balance|intcomma }}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-blue-50/10 border-x border-slate-100/70">
+                   
+                    Excellent. All supplier credit balances stand fully settled.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
 {% endblock %}

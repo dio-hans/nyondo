@@ -1,18 +1,24 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block title %}Stock Intake Registry | Nyondo Hardware{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto my-8 px-4">
+<div class="max-w-xl mx-auto my-8 px-4 space-y-4">
     
-    <div class="mb-4">
-        <a href="{% url 'product_list' %}" class="text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 tracking-wider flex items-center gap-1 transition-colors">
-           Back to Warehouse Inventory
+    <div class="flex justify-end">
+        <a href="{% url 'product_list' %}" class="inline-flex items-center text-[10px] font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest gap-1">
+           ← Back to Warehouse Inventory
         </a>
-        <h1 class="text-xl font-black text-slate-900 uppercase tracking-tight mt-3">
+    </div>
+
+    <div class="bg-slate-950 text-white rounded-xl p-6 border border-slate-800 shadow-sm">
+        <h1 class="text-sm font-black uppercase tracking-widest text-blue-400">
             {% if product %}Modify Item Properties{% else %}Log New Stock Intake Inventory{% endif %}
         </h1>
-        <p class="text-xs text-slate-400 font-medium mt-0.5">Record arriving material sheets, update active unit costs, or append credit line balance properties.</p>
+        <p class="text-xs text-slate-400 font-medium mt-1.5 leading-relaxed">
+            Record arriving material sheets, update active unit costs, or append credit line balance properties.
+        </p>
     </div>
 
     {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' or perms.inventory.add_product or product and perms.inventory.change_product %}
@@ -61,7 +67,7 @@
                     name="category" 
                     id="category"
                     required 
-                    class="w-full px-3 py-2.5 bg-slate-50/50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    class="w-full px-3 py-2.5 bg-slate-50/50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer"
                 >
                     {% for category in categories %}
                         <option value="{{ category.id }}" {% if product.category.id == category.id or not product and category.name|upper == 'GENERAL HARDWARE' %}selected{% endif %}>
@@ -111,7 +117,7 @@
                     name="unit_of_measure" 
                     id="unit_of_measure"
                     required 
-                    class="w-full px-3 py-2.5 bg-slate-50/50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    class="w-full px-3 py-2.5 bg-slate-50/50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer"
                 >
                     <option value="PCS" {% if product.unit_of_measure == 'PCS' or not product %}selected{% endif %}>Pieces / Bars (Pcs)</option>
                     <option value="BAG" {% if product.unit_of_measure == 'BAG' %}selected{% endif %}>Bags (Cement)</option>
@@ -156,7 +162,7 @@
             </div>
 
             <div class="border-t border-slate-100 pt-4 space-y-3">
-                <div class="flex items-center gap-2.5 bg-slate-50 border border-slate-100 p-3.5 rounded-xl">
+                <div class="flex items-center gap-2.5 bg-blue-50/40 border border-blue-100/50 p-4 rounded-xl">
                     <input 
                         type="checkbox" 
                         name="is_credit" 
@@ -169,7 +175,8 @@
                     </label>
                 </div>
 
-                <div id="creditSubFormFields" class="hidden space-y-4 bg-slate-50/50 p-4 rounded-xl border border-dashed border-slate-200 transition-all duration-200">
+                <div id="creditSubFormFields" class="hidden space-y-4 bg-slate-50 border border-slate-200 p-5 rounded-xl transition-all duration-200 text-slate-800">
+                    
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label for="supplier_id" class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">
@@ -178,7 +185,7 @@
                             <select
                                 name="supplier_id"
                                 id="supplier_id"
-                                class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                             >
                                 <option value="" selected disabled>Select supplier...</option>
                                 {% for supplier in suppliers %}
@@ -202,13 +209,14 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                        <div>
-                            <span class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Total Valuation</span>
-                            <div id="display_total_cost" class="px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-500 font-mono">UGX 0</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        <div class="bg-white border border-slate-200 rounded-lg p-3 relative overflow-hidden shadow-xs">
+                            <div class="absolute top-0 left-0 w-0.5 h-full bg-blue-500"></div>
+                            <span class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Total Valuation</span>
+                            <div id="display_total_cost" class="text-xs font-bold text-blue-600 font-mono">UGX 0</div>
                         </div>
-                        <div>
-                            <label for="amount_paid" class="block text-[10px] font-black text-slate-600 uppercase tracking-wider mb-2">Immediate Outlay (Paid)</label>
+                        <div class="bg-white border border-slate-200 rounded-lg p-3 shadow-xs">
+                            <label for="amount_paid" class="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Immediate Outlay (Paid)</label>
                             <input 
                                 type="number" 
                                 name="amount_paid" 
@@ -216,12 +224,13 @@
                                 value="0" 
                                 min="0" 
                                 oninput="calculateFinancialTotals()"
-                                class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-xs font-bold text-slate-800 font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                             >
                         </div>
-                        <div>
-                            <span class="block text-[10px] font-black text-rose-500 uppercase tracking-wider mb-2">Outstanding Liability Debt</span>
-                            <div id="display_balance_owed" class="px-3 py-2.5 bg-rose-50 border border-rose-100 rounded-lg text-xs font-black text-rose-600 font-mono">UGX 0</div>
+                        <div class="bg-white border border-slate-200 rounded-lg p-3 relative overflow-hidden shadow-xs">
+                            <div class="absolute top-0 left-0 w-0.5 h-full bg-rose-500"></div>
+                            <span class="block text-[9px] font-black text-rose-500 uppercase tracking-wider mb-1">Outstanding Debt</span>
+                            <div id="display_balance_owed" class="text-xs font-black text-rose-600 font-mono">UGX 0</div>
                         </div>
                     </div>
 
@@ -238,8 +247,8 @@
                 </div>
             </div>
 
-            <div id="priceWarning" class="hidden p-3.5 bg-rose-50 border border-rose-100 text-rose-800 rounded-lg text-[11px] font-bold items-center gap-2">
-              Selling price parameter must be strictly higher than the base inbound warehouse product unit cost.
+            <div id="priceWarning" class="hidden p-4 bg-rose-50 border border-rose-100 text-rose-800 rounded-lg text-[11px] font-bold items-center gap-2">
+              <span class="text-rose-600 font-black">⚠️ COMPLIANCE FAULT:</span> Selling price parameter must be strictly higher than the base inbound warehouse product unit cost.
             </div>
 
             <div class="pt-2">
@@ -250,13 +259,13 @@
         </form>
 
     {% else %}
-        <div class="bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm space-y-4">
+        <div class="bg-white border border-slate-200 rounded-xl p-8 text-center space-y-4 shadow-sm">
             <div class="w-14 h-14 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-2xl mx-auto">
                 <i class="fa-solid fa-shield-halved"></i>
             </div>
             <div class="space-y-1">
-                <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider">Inventory Clearance Required</h3>
-                <p class="text-xs text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest">Inventory Clearance Required</h3>
+                <p class="text-xs text-slate-400 font-medium max-w-sm mx-auto leading-relaxed pt-1">
                     Your current user credentials do not have permission models enabled to append new items or modify active warehouse inventory descriptions.
                 </p>
             </div>
@@ -270,27 +279,22 @@
 </div>
 
 <script>
-    // New function to handle selection from datalist options
     function handleProductSelection() {
         const inputVal = document.getElementById('product_name').value.trim();
         const options = document.querySelectorAll('#existing-products-list option');
         
         options.forEach(option => {
-            // Check if user input fully matches an option value
             if (option.value.trim() === inputVal) {
-                // Fetch datasets
                 const cost = option.getAttribute('data-cost');
                 const selling = option.getAttribute('data-selling');
                 const catId = option.getAttribute('data-category');
                 const uom = option.getAttribute('data-uom');
 
-                // Auto-populate fields cleanly
                 if (cost) document.getElementById('cost_price').value = cost;
                 if (selling) document.getElementById('selling_price').value = selling;
                 if (catId) document.getElementById('category').value = catId;
                 if (uom) document.getElementById('unit_of_measure').value = uom;
 
-                // Recompute immediate total liabilities visual panels
                 calculateFinancialTotals();
             }
         });
@@ -325,20 +329,18 @@
         const warning = document.getElementById('priceWarning');
         const submitBtn = document.getElementById('submitBtn');
 
-        // Layout evaluation checks
         if (sell > 0 && sell <= cost) {
             warning.style.display = 'flex';
             submitBtn.disabled = true;
-            submitBtn.className = "w-full bg-slate-200 text-slate-400 font-black py-3 rounded-lg text-xs uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-1.5 shadow-none";
+            submitBtn.className = "w-full bg-slate-100 text-slate-400 border border-slate-200 font-black py-3 rounded-lg text-xs uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-1.5 shadow-none";
         } else {
             warning.style.display = 'none';
             submitBtn.disabled = false;
             submitBtn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer";
         }
 
-        // Live math visualization execution
-        const totalCost = qty * cost;
-        const remainingBalance = totalCost - paid;
+        const totalCost = Math.round(qty * cost);
+        const remainingBalance = Math.round(totalCost - paid);
 
         document.getElementById('display_total_cost').innerText = "UGX " + totalCost.toLocaleString();
         document.getElementById('display_balance_owed').innerText = "UGX " + (remainingBalance > 0 ? remainingBalance.toLocaleString() : 0);

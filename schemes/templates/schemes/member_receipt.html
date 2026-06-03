@@ -6,7 +6,7 @@
 {% block content %}
 <div class="max-w-md mx-auto my-8 px-4">
 
-    {% if perms.schemes.view_deposit %}
+    {% if request.user.role == 'ADMIN' or request.user.role == 'SALES' %}
         <!-- Physical Receipt Audit Card Block (Only visible to users with 'view_deposit' clearance) -->
         <div class="bg-amber-50/40 border border-amber-200 rounded-xl shadow-sm p-6 relative overflow-hidden" id="print-area">
             
@@ -79,10 +79,10 @@
         <!-- Execution Interface Controls Panel -->
         <div class="mt-4 flex flex-col gap-2 no-print">
             <button onclick="window.print()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-3 text-xs uppercase tracking-wider rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-print"></i> Print Document Receipt
+               Print Document Receipt
             </button>
-            <a href="{% url 'schemes:schemes_list' %}" class="w-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 font-black py-3 text-xs uppercase tracking-wider rounded-lg transition-all shadow-sm flex items-center justify-center gap-2">
-                <i class="fa-solid fa-arrow-left-long"></i> Schemes Dashboard
+            <a href="{% url 'schemes_list' %}" class="w-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 font-black py-3 text-xs uppercase tracking-wider rounded-lg transition-all shadow-sm flex items-center justify-center gap-2">
+                Schemes Dashboard
             </a>
         </div>
 

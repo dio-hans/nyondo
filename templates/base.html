@@ -7,73 +7,79 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-100/70 font-sans text-slate-900 antialiased min-h-screen flex flex-col">
+<body class="bg-emerald-50/50 font-sans text-slate-900 antialiased min-h-screen flex flex-col">
 
     {% block header %}
-    <header class="bg-blue-50/20 backdrop-blur-md border-b border-blue-100/80 sticky top-0 z-50 shadow-xs">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            
-            <a href="{% if request.user.role == 'ADMIN'%}{% url 'admin_dashboard' %}{% elif request.user.role == 'MANAGER' %}{% url 'inventory_dashboard' %}{% endif %}" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
-                <!-- LOGO ICON FIX: Re-instated the Spanner and Screwdriver icon cluster framework -->
-                <div class="h-9 w-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-xs border border-blue-500 text-white relative">
-                    <i class="fa-solid fa-wrench text-xs absolute transform -translate-x-1 -translate-y-0.5 -rotate-45"></i>
-                    <i class="fa-solid fa-screwdriver text-xs absolute transform translate-x-1 translate-y-0.5 -rotate-45"></i>
-                </div>
-                <div>
-                    <span class="text-slate-900 font-black text-lg tracking-wider block leading-none">NYONDO</span>
-                    <span class="text-blue-600 font-bold text-xs tracking-widest uppercase">HARDWARE</span>
-                </div>
-            </a>
-
-            <div class="flex items-center gap-4">
-                <div class="hidden sm:flex flex-col text-right">
-                    <span class="text-xs font-bold text-slate-900 leading-tight">{{ request.user.username }}</span>
-                    <span class="text-[10px] text-blue-600 font-semibold uppercase tracking-wider">
-                        {{ request.user.get_role_display }}
-                    </span>
-                </div>
-                <div class="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                    {{ request.user.username|slice:":2"|upper }}
-                </div>
+    <header class="bg-white/80 backdrop-blur-md border-b border-blue-100/80 sticky top-0 z-50 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
                 
-                <a href="{% url 'login' %}" class="text-slate-400 hover:text-red-600 transition-colors pl-2 border-l border-slate-200 py-1 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider" title="Terminate Session">
-                    <span class="hidden sm:inline">Logout</span>
+                <a href="{% if request.user.role == 'ADMIN'%}{% url 'admin_dashboard' %}{% elif request.user.role == 'MANAGER' %}{% url 'inventory_dashboard' %}{% endif %}" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
+                    <!-- LOGO ICON FIX: Re-instated the Spanner and Screwdriver icon cluster framework -->
+                    <div class="h-9 w-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-xs border border-blue-500 text-white relative">
+                        <i class="fa-solid fa-screwdriver-wrench text-sm"></i>
+                    </div>
+                    <div>
+                        <span class="text-slate-900 font-black text-lg tracking-wider block leading-none">NYONDO</span>
+                        <span class="text-blue-600 font-bold text-xs tracking-widest uppercase">HARDWARE</span>
+                    </div>
                 </a>
-            </div>
 
+                <div class="flex items-center gap-4">
+                    <div class="hidden sm:flex flex-col text-right">
+                        <span class="text-xs font-bold text-slate-900 leading-tight">{{ request.user.username }}</span>
+                        <span class="text-[10px] text-blue-600 font-semibold uppercase tracking-wider">
+                            {{ request.user.get_role_display }}
+                        </span>
+                    </div>
+                    <div class="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                        {{ request.user.username|slice:":2"|upper }}
+                    </div>
+                    
+                    <a href="{% url 'login' %}" class="text-slate-400 hover:text-red-600 transition-colors pl-2 border-l border-slate-200 py-1 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider" title="Terminate Session">
+                        <span class="hidden sm:inline">Logout</span>
+                    </a>
+                </div>
+
+            </div>
         </div>
-    </div>
-</header>
+    </header>
     {% endblock %}
 
+    <!-- Top Messages Banner (Swapped to Light Blue framework) -->
     {% if messages %}
-    {% for message in messages %}
-        <div class="p-4 mb-4 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg">
-            {{ message }}
+        <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            {% for message in messages %}
+                <div class="p-4 mb-2 text-xs font-bold text-blue-800 bg-blue-50 border border-blue-100 rounded-lg shadow-xs flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-blue-500"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
         </div>
-    {% endfor %}
-{% endif %}
+    {% endif %}
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
+        <!-- Contextual Notification Matrix (Swapped green indicators to clean Light Blue components) -->
         {% if messages %}
         <div class="space-y-2">
+            {% block system_messages %}
             {% for message in messages %}
             <div class="p-4 rounded-lg text-sm font-medium border flex items-center gap-3 shadow-xs
-                {% if message.tags == 'success' %} bg-emerald-50 border-emerald-200 text-emerald-800
+                {% if message.tags == 'success' %} bg-blue-50 border-blue-200 text-blue-800
                 {% elif message.tags == 'error' %} bg-rose-50 border-rose-200 text-rose-800
                 {% else %} bg-blue-50 border-blue-200 text-blue-800 {% endif %}">
-                <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %} text-base"></i>
+                <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check text-blue-500{% elif message.tags == 'error' %}fa-circle-exclamation text-rose-500{% else %}fa-circle-info text-blue-500{% endif %} text-base"></i>
                 {{ message }}
             </div>
             {% endfor %}
+            {% endblock system_messages %}
         </div>
         {% endif %}
 
         {% block dash_links %}
             {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' or request.user.is_superuser %}
-            <div class="bg-blue-50/40 border border-blue-100/60 rounded-xl p-4 shadow-xs">
+            <div class="bg-blue-50/40 border border-blue-100/60 rounded-xl p-4 shadow-xs backdrop-blur-xs">
                 <h2 class="text-[10px] font-black text-blue-500/80 uppercase tracking-wider mb-3">
                     Administrative Control Operations
                 </h2>
@@ -82,7 +88,7 @@
                     <!-- LINK BLOCK: Overview Dashboard -->
                     <a href="{% if request.user.role == 'ADMIN' or request.user.is_superuser %}{% url 'admin_dashboard' %}{% elif request.user.role == 'MANAGER' %}{% url 'inventory_dashboard' %}{% endif %}" 
                        class="p-3 rounded-lg text-center transition-all group shadow-xs border 
-                       {% if request.resolver_match.url_name == 'inventory_dashboard' or request.resolver_match.url_name == 'admin_dashboard' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white/80 border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                       {% if request.resolver_match.url_name == 'inventory_dashboard' or request.resolver_match.url_name == 'admin_dashboard' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
                         <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'inventory_dashboard' or request.resolver_match.url_name == 'admin_dashboard' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
                             Overview Dashboard
                         </span>
@@ -93,7 +99,7 @@
                     <!-- LINK BLOCK: Product Registry -->
                     <a href="{% url 'product_list' %}" 
                        class="p-3 rounded-lg text-center transition-all group shadow-xs border 
-                       {% if request.resolver_match.url_name == 'product_list' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white/80 border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                       {% if request.resolver_match.url_name == 'product_list' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
                         <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'product_list' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
                             Product Registry
                         </span>
@@ -104,7 +110,7 @@
                     <!-- LINK BLOCK: Stock Movements -->
                     <a href="{% url 'stock_movement' %}" 
                        class="p-3 rounded-lg text-center transition-all group shadow-xs border 
-                       {% if request.resolver_match.url_name == 'stock_movement' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white/80 border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                       {% if request.resolver_match.url_name == 'stock_movement' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
                         <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'stock_movement' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
                             Stock Movements
                         </span>
@@ -115,7 +121,7 @@
                     <!-- LINK BLOCK: Onboard Vendor -->
                     <a href="{% url 'supplier_registration' %}" 
                        class="p-3 rounded-lg text-center transition-all group shadow-xs border 
-                       {% if request.resolver_match.url_name == 'supplier_registration' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white/80 border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                       {% if request.resolver_match.url_name == 'supplier_registration' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
                         <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'supplier_registration' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
                             Onboard Vendor
                         </span>
@@ -126,7 +132,7 @@
                     <!-- LINK BLOCK: Debt Ledger -->
                     <a href="{% url 'supplier_debt_list' %}" 
                        class="p-3 rounded-lg text-center transition-all group shadow-xs col-span-2 sm:col-span-1 border 
-                       {% if request.resolver_match.url_name == 'supplier_debt_list' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white/80 border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                       {% if request.resolver_match.url_name == 'supplier_debt_list' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
                         <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'supplier_debt_list' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
                             Debt Ledger
                         </span>
