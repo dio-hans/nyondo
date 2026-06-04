@@ -110,6 +110,7 @@ def product_save(request, product_id=None):
     }
     return render(request, 'inventory/product_form.html', context)
 
+
 @login_required
 @role_required(['MANAGER'])
 def product_create(request):
@@ -184,7 +185,7 @@ def product_create(request):
                 notes='Credit Supply Consolidated' if is_credit else 'Cash Sourced Intake'
             )
 
-            # Execution block for Procurement integration (All cleanly grouped inside is_credit)
+            # Execution block for Procurement integration
             if is_credit:
                 supplier = get_object_or_404(Supplier, id=supplier_id)
                 total_calculated_amount = qty_arriving * cost
@@ -203,18 +204,34 @@ def product_create(request):
                     supplier.total_owed += balance_outstanding
                     supplier.save()
 
-                # 2. Write Master Purchase Invoice Ledger Row (Brought out of the old 'else' trap)
-                purchase_order = PurchaseOrder.objects.create(
-                    supplier=supplier,
+                # 2. FIXED: Correctly assigned variable and cleaned syntax errors
+                purchase_order, created = PurchaseOrder.objects.get_or_create(
                     invoice_number=invoice_no,
-                    total_amount=total_calculated_amount,
-                    amount_paid=amount_paid,
-                    balance=max(0.0, balance_outstanding),
-                    payment_status=status,
-                    notes=notes if notes else f"Automated intake for {name}"
+                    defaults={
+                        'supplier': supplier,
+                        'total_amount': total_calculated_amount,
+                        'amount_paid': amount_paid,
+                        'balance': max(0.0, balance_outstanding),
+                        'payment_status': status,
+                        'notes': notes if notes else f"Automated intake for {name}"
+                    }
                 )
 
-                # 3. Create Row Sub-Item Breakdown Item
+                # If the invoice number already exists, safely increment its parameters
+                if not created:
+                    purchase_order.total_amount += total_calculated_amount
+                    purchase_order.amount_paid += amount_paid
+                    purchase_order.balance = max(0.0, purchase_order.total_amount - purchase_order.amount_paid)
+                    
+                    if purchase_order.balance <= 0:
+                        purchase_order.payment_status = 'PAID'
+                    elif purchase_order.amount_paid > 0:
+                        purchase_order.payment_status = 'PARTIAL'
+                    else:
+                        purchase_order.payment_status = 'PENDING'
+                    purchase_order.save()
+
+                # 3. Create Row Sub-Item Breakdown Item (Now maps seamlessly)
                 PurchaseItem.objects.create(
                     purchase_order=purchase_order,
                     product=product,
@@ -245,7 +262,6 @@ def product_create(request):
         'product': None
     }
     return render(request, 'product_form.html', context)
-
 
 @login_required
 @role_required(['MANAGER', 'ADMIN'])

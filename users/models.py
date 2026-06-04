@@ -13,7 +13,6 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.SALES_ATTENDANT
     )
-    # INDENTATION FIXED: These must be indented to belong to the User class
     contact = models.CharField(max_length=15)
     employee_id = models.CharField(max_length=20)
 

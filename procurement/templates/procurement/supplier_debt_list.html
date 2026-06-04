@@ -39,18 +39,27 @@
     </div>
 </div>
 
-<div class="flex flex-col lg:flex-row lg:items-center gap-4 p-4 mb-6 bg-slate-50 rounded-xl border border-slate-200/60">
-    <div class="flex items-center gap-1.5 text-[11px] font-bold flex-wrap">
-        <a href="?preset=today" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-colors {% if request.GET.preset == 'today' %}bg-blue-600 border-blue-600 text-white hover:bg-blue-700{% endif %}">Today</a>
-        <a href="?preset=yesterday" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-colors {% if request.GET.preset == 'yesterday' %}bg-blue-600 border-blue-600 text-white hover:bg-blue-700{% endif %}">Yesterday</a>
-        <a href="?preset=this_month" class="px-2.5 py-1.5 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-colors {% if request.GET.preset == 'this_month' or not request.GET.preset and not request.GET.start_date %}bg-blue-600 border-blue-600 text-white hover:bg-blue-700{% endif %}">This Month</a>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 text-[11px] font-bold">
+    <div class="flex items-center gap-1.5 flex-wrap">
+        <a href="?preset=today" class="px-3 py-1.5 rounded-lg border uppercase tracking-wider transition-all 
+            {% if request.GET.preset == 'today' %} bg-blue-600 border-blue-600 text-white hover:bg-blue-700 shadow-xs {% else %} bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 {% endif %}">
+            Today
+        </a>
+        <a href="?preset=yesterday" class="px-3 py-1.5 rounded-lg border uppercase tracking-wider transition-all 
+            {% if request.GET.preset == 'yesterday' %} bg-blue-600 border-blue-600 text-white hover:bg-blue-700 shadow-xs {% else %} bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 {% endif %}">
+            Yesterday
+        </a>
+        <a href="?preset=this_month" class="px-3 py-1.5 rounded-lg border uppercase tracking-wider transition-all 
+            {% if request.GET.preset == 'this_month' or not request.GET.preset and not request.GET.start_date %} bg-blue-600 border-blue-600 text-white hover:bg-blue-700 shadow-xs {% else %} bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 {% endif %}">
+            This Month
+        </a>
     </div>
     
-    <form method="GET" class="flex flex-wrap items-center gap-2 text-[11px] font-bold sm:ml-auto lg:ml-auto">
-        <input type="date" name="start_date" value="{{ start_date|default:'' }}" required class="border border-slate-200 px-2 py-1.5 rounded-lg text-slate-700 bg-white focus:outline-none focus:border-blue-500 font-mono">
+    <form method="GET" class="flex items-center gap-2">
+        <input type="date" name="start_date" value="{{ start_date|default:'' }}" required class="border border-slate-200 px-2.5 py-1.5 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:border-blue-500 font-mono">
         <span class="text-slate-400 lowercase font-medium">to</span>
-        <input type="date" name="end_date" value="{{ end_date|default:'' }}" required class="border border-slate-200 px-2 py-1.5 rounded-lg text-slate-700 bg-white focus:outline-none focus:border-blue-500 font-mono">
-        <button type="submit" class="bg-slate-900 text-white px-4 py-1.5 rounded-lg uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer">Run</button>
+        <input type="date" name="end_date" value="{{ end_date|default:'' }}" required class="border border-slate-200 px-2.5 py-1.5 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:border-blue-500 font-mono">
+        <button type="submit" class="bg-slate-900 text-white px-4 py-1.5 rounded-lg uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer shadow-xs">Run</button>
     </form>
 </div>
 

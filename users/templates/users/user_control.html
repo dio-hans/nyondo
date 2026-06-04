@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags static %}
+
+{% block title %}User Control Center | Nyondo Hardware{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <div class="border-b border-slate-200 pb-4">
+        <h1 class="text-xl font-black text-slate-900 uppercase tracking-wider">Staff Profiling & Roster Portal</h1>
+        <p class="text-xs text-slate-500 font-medium">Manage security clearances, view active operational nodes, and provision new credentials.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest">Active Terminal Operational Nodes</h3>
+                <span class="text-[10px] font-mono font-black px-2 py-0.5 bg-slate-200 text-slate-700 rounded-sm uppercase">
+                    {{ users.count }} Total Users
+                </span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-400 font-bold border-b border-slate-200 text-[10px] uppercase tracking-wider">
+                            <th class="p-4">Username / Identity</th>
+                            <th class="p-4">Employee Token ID</th>
+                            <th class="p-4">Assigned Role Authority</th>
+                            <th class="p-4">Contact Gateway</th>
+                            <th class="p-4">System State</th>
+                            <th class="p-4 text-right">Access Controls</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                        {% for staff in users %}
+                            <tr class="hover:bg-slate-50/80 transition-all">
+                                <td class="p-4 font-bold text-slate-900 uppercase tracking-wide">{{ staff.username }}</td>
+                                <td class="p-4 font-mono text-slate-500 font-bold">{{ staff.employee_id|default:"SYS-ROOT" }}</td>
+                                <td class="p-4">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold 
+                                        {% if staff.role == 'ADMIN' %}bg-purple-100 text-purple-800
+                                        {% elif staff.role == 'MANAGER' %}bg-blue-100 text-blue-800
+                                        {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                        {{ staff.get_role_display }}
+                                    </span>
+                                </td>
+                                <td class="p-4 font-mono text-slate-500">{{ staff.contact|default:"--" }}</td>
+                                <td class="p-4">
+                                    {% if staff.is_active %}
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 uppercase">Active</span>
+                                    {% else %}
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 uppercase">Suspended</span>
+                                    {% endif %}
+                                </td>
+                                <td class="p-4 text-right">
+                                    {% if staff.id == request.user.id %}
+                                        <span class="text-[10px] font-black uppercase text-slate-400 tracking-wide italic">Self Node</span>
+                                    {% else %}
+                                        <a href="{% url 'toggle_user_status' staff.id %}" 
+                                           class="px-2.5 py-1 text-[10px] font-black rounded-md uppercase tracking-wider transition-all shadow-2xs border
+                                           {% if staff.is_active %} border-red-200 bg-red-50 hover:bg-red-100 text-red-700 {% else %} border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 {% endif %}">
+                                            {% if staff.is_active %}Revoke Access{% else %}Grant Access{% endif %}
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="p-8 text-center text-slate-400 font-medium font-sans">No staff nodes found in the database.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+                <div class="w-6 h-6 bg-blue-50 border border-blue-100 text-blue-600 rounded-md flex items-center justify-center text-xs shadow-xs">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest">Provision New Account</h3>
+            </div>
+
+            <div class="p-5">
+                <form method="POST" action="" novalidate class="space-y-4 text-xs font-bold text-slate-700">
+                    {% csrf_token %}
+                    
+                    <div class="space-y-3 entry-crispy-override">
+                        {{ form|crispy }}
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-id-card text-[10px]"></i> Complete Account Registration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

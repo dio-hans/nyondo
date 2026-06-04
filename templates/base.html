@@ -15,7 +15,6 @@
             <div class="flex items-center justify-between h-16">
                 
                 <a href="{% if request.user.role == 'ADMIN'%}{% url 'admin_dashboard' %}{% elif request.user.role == 'MANAGER' %}{% url 'inventory_dashboard' %}{% endif %}" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
-                    <!-- LOGO ICON FIX: Re-instated the Spanner and Screwdriver icon cluster framework -->
                     <div class="h-9 w-9 bg-blue-600 rounded-lg flex items-center justify-center shadow-xs border border-blue-500 text-white relative">
                         <i class="fa-solid fa-screwdriver-wrench text-sm"></i>
                     </div>
@@ -46,28 +45,15 @@
     </header>
     {% endblock %}
 
-    <!-- Top Messages Banner (Swapped to Light Blue framework) -->
-    {% if messages %}
-        <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            {% for message in messages %}
-                <div class="p-4 mb-2 text-xs font-bold text-blue-800 bg-blue-50 border border-blue-100 rounded-lg shadow-xs flex items-center gap-2">
-                    <i class="fa-solid fa-circle-info text-blue-500"></i>
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        <!-- Contextual Notification Matrix (Swapped green indicators to clean Light Blue components) -->
         {% if messages %}
-        <div class="space-y-2">
+        <div id="django-message-container" class="space-y-2 transition-opacity duration-500 ease-in-out">
             {% block system_messages %}
             {% for message in messages %}
             <div class="p-4 rounded-lg text-sm font-medium border flex items-center gap-3 shadow-xs
                 {% if message.tags == 'success' %} bg-blue-50 border-blue-200 text-blue-800
-                {% elif message.tags == 'error' %} bg-rose-50 border-rose-200 text-rose-800
+                {% elif message.tags == 'error' %} bg-rose-50 border-rose-200 text-rose-700
                 {% else %} bg-blue-50 border-blue-200 text-blue-800 {% endif %}">
                 <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check text-blue-500{% elif message.tags == 'error' %}fa-circle-exclamation text-rose-500{% else %}fa-circle-info text-blue-500{% endif %} text-base"></i>
                 {{ message }}
@@ -83,9 +69,8 @@
                 <h2 class="text-[10px] font-black text-blue-500/80 uppercase tracking-wider mb-3">
                     Administrative Control Operations
                 </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                  
-                    <!-- LINK BLOCK: Overview Dashboard -->
                     <a href="{% if request.user.role == 'ADMIN' or request.user.is_superuser %}{% url 'admin_dashboard' %}{% elif request.user.role == 'MANAGER' %}{% url 'inventory_dashboard' %}{% endif %}" 
                        class="p-3 rounded-lg text-center transition-all group shadow-xs border 
                        {% if request.resolver_match.url_name == 'inventory_dashboard' or request.resolver_match.url_name == 'admin_dashboard' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
@@ -96,7 +81,6 @@
                     </a>
 
                     {% if request.user.role == 'MANAGER' %}
-                    <!-- LINK BLOCK: Product Registry -->
                     <a href="{% url 'product_list' %}" 
                        class="p-3 rounded-lg text-center transition-all group shadow-xs border 
                        {% if request.resolver_match.url_name == 'product_list' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
@@ -107,7 +91,6 @@
                     </a>
                     {% endif %}
 
-                    <!-- LINK BLOCK: Stock Movements -->
                     <a href="{% url 'stock_movement' %}" 
                        class="p-3 rounded-lg text-center transition-all group shadow-xs border 
                        {% if request.resolver_match.url_name == 'stock_movement' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
@@ -118,7 +101,6 @@
                     </a>
 
                     {% if request.user.role == 'MANAGER' %}
-                    <!-- LINK BLOCK: Onboard Vendor -->
                     <a href="{% url 'supplier_registration' %}" 
                        class="p-3 rounded-lg text-center transition-all group shadow-xs border 
                        {% if request.resolver_match.url_name == 'supplier_registration' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
@@ -129,15 +111,25 @@
                     </a>
                     {% endif %}
 
-                    <!-- LINK BLOCK: Debt Ledger -->
                     <a href="{% url 'supplier_debt_list' %}" 
-                       class="p-3 rounded-lg text-center transition-all group shadow-xs col-span-2 sm:col-span-1 border 
+                       class="p-3 rounded-lg text-center transition-all group shadow-xs border 
                        {% if request.resolver_match.url_name == 'supplier_debt_list' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
                         <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'supplier_debt_list' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
                             Debt Ledger
                         </span>
                         <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'supplier_debt_list' %} text-blue-500 {% else %} text-slate-400 {% endif %}">Procurement credit</span>
                     </a>
+
+                    {% if request.user.role == 'ADMIN' or request.user.is_superuser %}
+                    <a href="{% url 'register' %}" 
+                       class="p-3 rounded-lg text-center transition-all group shadow-xs border 
+                       {% if request.resolver_match.url_name == 'register_user' %} bg-blue-100/70 border-blue-300 text-blue-700 {% else %} bg-white border-blue-100/40 hover:border-blue-300 hover:bg-blue-50/50 {% endif %}">
+                        <span class="block text-xs font-black uppercase tracking-wide {% if request.resolver_match.url_name == 'register_user' %} text-blue-700 {% else %} text-slate-800 group-hover:text-blue-600 {% endif %}">
+                            User Control
+                        </span>
+                        <span class="block text-[10px] font-medium mt-0.5 {% if request.resolver_match.url_name == 'register_user' %} text-blue-500 {% else %} text-slate-400 {% endif %}">Terminal staff</span>
+                    </a>
+                    {% endif %}
 
                 </div>
             </div>
@@ -154,6 +146,20 @@
     <footer class="bg-white border-t border-blue-100/70 py-4 text-center text-xs text-slate-400 font-medium mt-auto">
         &copy; 2026 Nyondo Hardware Management System &middot; Driven by Double-Entry Logic
     </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const messageContainer = document.getElementById('django-message-container');
+            if (messageContainer) {
+                setTimeout(() => {
+                    messageContainer.style.opacity = '0';
+                    setTimeout(() => {
+                        messageContainer.remove();
+                    }, 500); 
+                }, 4000); 
+            }
+        });
+    </script>
 
 </body>
 </html>
