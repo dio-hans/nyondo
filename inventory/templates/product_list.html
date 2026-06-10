@@ -121,7 +121,7 @@
                     <td class="p-4 text-center whitespace-nowrap border-x border-slate-100/70">
                         {% if product.current_stock <= product.reorder_level %}
                             <span class="px-2.5 py-1 text-[9px] font-black uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200 rounded-md inline-block animate-pulse">
-                                <i class="fa-solid fa-triangle-exclamation mr-0.5"></i> CRITICAL LOW STOCK
+                               CRITICAL LOW STOCK
                             </span>
                         {% else %}
                             <span class="px-2.5 py-1 text-[9px] font-black uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md inline-block">
@@ -133,7 +133,7 @@
                 {% empty %}
                 <tr>
                     <td colspan="6" class="text-center py-12 text-slate-400 font-bold uppercase tracking-wide bg-blue-50/10 border-x border-slate-100/70">
-                        <i class="fa-solid fa-boxes-prevent text-slate-300 text-xl block mb-2"></i>
+                      
                         No hardware inventory files registered in database matrix.
                     </td>
                 </tr>

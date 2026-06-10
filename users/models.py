@@ -17,4 +17,4 @@ class User(AbstractUser):
     employee_id = models.CharField(max_length=20)
 
     def __str__(self):
-        return f"{self.username} ({self.get_role_display()})"
+        return f"{self.username} ({self.get_role_display()})" 

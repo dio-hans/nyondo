@@ -1,5 +1,4 @@
 from django.db import models
-from inventory.models import Product
 from django.utils import timezone
 
 # code goes here
@@ -31,7 +30,7 @@ class Supplier(models.Model):
     )
 
     product = models.ForeignKey(
-        Product,
+        'inventory.Product',
         on_delete=models.CASCADE
     )
 
@@ -108,7 +107,7 @@ class PurchaseItem(models.Model):
     )
 
     product = models.ForeignKey(
-        Product,
+        'inventory.Product',
         on_delete=models.CASCADE
     )
 

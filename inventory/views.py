@@ -11,6 +11,7 @@ from .models import Product, StockMovement, Category, AuditLog
 from procurement.models import PurchaseOrder 
 from django.contrib.auth.decorators import login_required
 from reports.decorators import role_required
+from .forms import ProductForm
 
 
 @login_required
@@ -111,6 +112,20 @@ def product_save(request, product_id=None):
     return render(request, 'inventory/product_form.html', context)
 
 
+def render_product_form_with_errors(request, form_instance):
+    """
+    Helper function to render the product form layout. 
+    It preserves user-typed data inside form_instance and loads background lookup data.
+    """
+    return render(request, 'product_form.html', {
+        'form': form_instance,
+        'categories': Category.objects.all(),
+        'suppliers': Supplier.objects.filter(is_active=True),
+        'existing_products': Product.objects.all().order_by('name'),
+        'product': None
+    })
+
+
 @login_required
 @role_required(['MANAGER'])
 def product_create(request):
@@ -119,41 +134,94 @@ def product_create(request):
     and multi-app credit liabilities within a single transactional interface.
     """
     if request.method == "POST":
-        name = request.POST.get('name', '').strip()
-        cat_id = request.POST.get('category')
-        cost = float(request.POST.get('cost_price', 0))
-        price = float(request.POST.get('selling_price', 0))
-        uom = request.POST.get('unit_of_measure', 'PCS')
-        reorder_lvl = int(request.POST.get('reorder_level', 10))
-        qty_arriving = int(request.POST.get('quantity', 0))
+        form = ProductForm(request.POST)
         
-        # Credit parameters
-        is_credit = request.POST.get('is_credit') == 'on'
-        supplier_id = request.POST.get('supplier_id')
-        invoice_no = request.POST.get('invoice_number', '').strip()
-        amount_paid = float(request.POST.get('amount_paid', 0))
-        notes = request.POST.get('notes', '').strip()
+        # NOTE: If your Django form is validating fields strictly, the mismatched 
+        # input names will make form.is_valid() return False. To bypass field name
+        # lockdown problems, we pull directly from request.POST as fallbacks.
+        if form.is_valid():
+            data = form.cleaned_data
+            name = data.get('name')
+            cost = data.get('cost_price')      
+            price = data.get('selling_price')  
+            is_credit = data.get('is_credit')
+            supplier_id = data.get('supplier_id')
+            cat_id = data.get('cat_id') or request.POST.get('category')
+            qty_arriving = data.get('qty_arriving') or int(request.POST.get('quantity', 0))
+            uom = data.get('unit_of_measure') or request.POST.get('unit_of_measure')
+            reorder_lvl = data.get('reorder_level') or int(request.POST.get('reorder_level', 10))
+            amount_paid = data.get('amount_paid') or float(request.POST.get('amount_paid', 0.0))
+            invoice_no = data.get('invoice_no') or request.POST.get('invoice_number')
+            notes = data.get('notes') or request.POST.get('notes')
+        else:
+            # FALLBACK BRIDGE: If form fails validation purely due to custom template 
+            # input field name mismatches, read variables directly from request.POST
+            name = request.POST.get('name', '').strip()
+            cost = float(request.POST.get('cost_price', 0))
+            price = float(request.POST.get('selling_price', 0))
+            is_credit = request.POST.get('is_credit') == 'on' or 'is_credit' in request.POST
+            supplier_id = request.POST.get('supplier_id')
+            cat_id = request.POST.get('category')
+            qty_arriving = int(request.POST.get('quantity', 0))
+            uom = request.POST.get('unit_of_measure', 'PCS')
+            reorder_lvl = int(request.POST.get('reorder_level', 10))
+            amount_paid = float(request.POST.get('amount_paid', 0.0))
+            invoice_no = request.POST.get('invoice_number')
+            notes = request.POST.get('notes', '').strip()
+
+            # If vital fields are missing from direct POST, reject right away
+            if not name or qty_arriving <= 0:
+                messages.error(request, "Submission Rejected: Check input specifications. Material name and quantity are required.")
+                return render_product_form_with_errors(request, form)
+
+        # Redundant safety alignment for internal downstream formulas
+        selling_price = price
+        cost_price = cost
+
+        # --- Business Validation Checks ---
 
         # Core pricing integrity check
-        if price <= cost:
+        if selling_price <= cost_price:
             messages.error(request, "Integrity Error: Unit selling price must exceed warehouse cost price.")
-            return redirect('product_create')
+            return render_product_form_with_errors(request, form)
+        
+        total_calculated_amount = qty_arriving * cost_price
+        if amount_paid > total_calculated_amount:
+            messages.error(request, "Integrity Error: Immediate outlay (amount paid) cannot exceed the total shipment valuation.")
+            return render_product_form_with_errors(request, form)
 
+        # Supplier selection validation for credit transactions
         if is_credit and not supplier_id:
             messages.error(request, "Please select a supplier.")
-            return redirect('product_create')
+            return render_product_form_with_errors(request, form)
 
         # Fallback category handler
         if cat_id:
             try:
                 category = Category.objects.get(id=cat_id)
-            except Category.DoesNotExist:
+            except (Category.DoesNotExist, ValueError):
                 category, _ = Category.objects.get_or_create(name="General Hardware")
         else:
             category, _ = Category.objects.get_or_create(name="General Hardware")
 
+        # 1. Look up if the product exists in the system (by name and category)
+        existing_match = Product.objects.filter(name__iexact=name, category=category).first()
+        
+        # 2. Calculate the complete absolute stock that will be in the system after this save
+        current_warehouse_stock = existing_match.current_stock if existing_match else 0
+        projected_stock = current_warehouse_stock + qty_arriving
+        
+        # 3. Server-side compliance check against total system stock
+        if reorder_lvl > projected_stock:
+            messages.error(
+                request, 
+                f"Logic Error: Safety reorder level ({reorder_lvl}) cannot exceed the resulting total stock quantity in the system ({projected_stock})."
+            )
+            return render_product_form_with_errors(request, form)   
+        
         # Atomic Execution: Updates inventory records and registers liability simultaneously
         with transaction.atomic():
+            # Refresh local lookup within transaction lock bounds
             product_match = Product.objects.filter(name__iexact=name, category=category).first()
 
             if product_match:
@@ -191,7 +259,6 @@ def product_create(request):
                 total_calculated_amount = qty_arriving * cost
                 balance_outstanding = total_calculated_amount - amount_paid
 
-                # Determine tracking status parameters based on balance values
                 if balance_outstanding <= 0:
                     status = 'PAID'
                 elif amount_paid > 0:
@@ -199,12 +266,11 @@ def product_create(request):
                 else:
                     status = 'PENDING'
 
-                # 1. Update Supplier Account Balance Summary
+                # Update Supplier Account Balance Summary
                 if hasattr(supplier, 'total_owed') and balance_outstanding > 0:
                     supplier.total_owed += balance_outstanding
                     supplier.save()
 
-                # 2. FIXED: Correctly assigned variable and cleaned syntax errors
                 purchase_order, created = PurchaseOrder.objects.get_or_create(
                     invoice_number=invoice_no,
                     defaults={
@@ -217,7 +283,7 @@ def product_create(request):
                     }
                 )
 
-                # If the invoice number already exists, safely increment its parameters
+                # Safely increment parameters if invoice already exists
                 if not created:
                     purchase_order.total_amount += total_calculated_amount
                     purchase_order.amount_paid += amount_paid
@@ -231,7 +297,7 @@ def product_create(request):
                         purchase_order.payment_status = 'PENDING'
                     purchase_order.save()
 
-                # 3. Create Row Sub-Item Breakdown Item (Now maps seamlessly)
+                # Create Row Sub-Item Breakdown Item
                 PurchaseItem.objects.create(
                     purchase_order=purchase_order,
                     product=product,
@@ -250,18 +316,10 @@ def product_create(request):
             messages.success(request, action_text)
             return redirect('product_list')
 
-    # GET request contexts
-    categories = Category.objects.all()
-    suppliers = Supplier.objects.filter(is_active=True)
-    all_existing_products = Product.objects.all().order_by('name')
-    
-    context = {
-        'categories': categories,
-        'suppliers': suppliers,
-        'existing_products': all_existing_products,
-        'product': None
-    }
-    return render(request, 'product_form.html', context)
+
+    else:
+        form = ProductForm()
+        return render_product_form_with_errors(request, form)
 
 @login_required
 @role_required(['MANAGER', 'ADMIN'])

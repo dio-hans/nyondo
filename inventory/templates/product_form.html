@@ -8,7 +8,7 @@
     
     <div class="flex justify-end">
         <a href="{% url 'product_list' %}" class="inline-flex items-center text-[10px] font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest gap-1">
-           ← Back to Warehouse Inventory
+           Back to Warehouse Inventory
         </a>
     </div>
 
@@ -43,10 +43,11 @@
                     class="w-full px-3 py-2.5 bg-slate-50/50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                 >
                 
-                <datalist id="existing-products-list">
+               <datalist id="existing-products-list">
                     {% for prod in existing_products %}
                         <option 
                             value="{{ prod.name }}"
+                            data-stock="{{ prod.current_stock }}"
                             data-cost="{{ prod.cost_price }}"
                             data-selling="{{ prod.selling_price }}"
                             data-category="{{ prod.category.id }}"
@@ -55,7 +56,7 @@
                     {% endfor %}
                 </datalist>
                 <span class="text-[9px] text-slate-400 font-semibold block mt-1.5 leading-normal">
-                    * Typing matching descriptions restocks current lines; custom inputs auto-generate new unique stock definitions.
+                    Typing matching descriptions restocks current lines; custom inputs auto-generate new unique stock definitions.
                 </span>
             </div>
 
@@ -97,16 +98,16 @@
                     <label for="reorder_level" class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">
                         Safety Reorder Level *
                     </label>
-                    <input 
-                        type="number" 
-                        name="reorder_level" 
-                        id="reorder_level"
-                        value="{{ product.reorder_level|default:'10' }}" 
-                        min="0" 
-                        required
-                        class="w-full px-3 py-2.5 bg-slate-50/50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    >
-                </div>
+    <input 
+        type="number" 
+        name="reorder_level" 
+        id="reorder_level"
+        value="{{ product.reorder_level|default:'10' }}" 
+        min="0" 
+        required
+        oninput="calculateFinancialTotals()" class="w-full px-3 py-2.5 bg-slate-50/50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+    >
+</div>
             </div>
 
             <div>
@@ -129,7 +130,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="cost_price" class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">
-                        Unit Cost Price (Buying UGX) *
+                        Unit Cost Price (Buying UGX) 
                     </label>
                     <input 
                         type="number" 
@@ -145,7 +146,7 @@
                 </div>
                 <div>
                     <label for="selling_price" class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">
-                        Active Retail Price (Selling UGX) *
+                        Active Retail Price (Selling UGX) 
                     </label>
                     <input 
                         type="number" 
@@ -248,12 +249,12 @@
             </div>
 
             <div id="priceWarning" class="hidden p-4 bg-rose-50 border border-rose-100 text-rose-800 rounded-lg text-[11px] font-bold items-center gap-2">
-              <span class="text-rose-600 font-black">⚠️ COMPLIANCE FAULT:</span> Selling price parameter must be strictly higher than the base inbound warehouse product unit cost.
+              <span class="text-rose-600 font-black"> COMPLIANCE FAULT:</span> Selling price parameter must be strictly higher than the base inbound warehouse product unit cost.
             </div>
 
             <div class="pt-2">
                 <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
-                    <i class="fa-solid fa-boxes-stacked"></i> Log Shipment & Complete Verification
+                     Log Shipment & Complete Verification
                 </button>
             </div>
         </form>
@@ -261,7 +262,7 @@
     {% else %}
         <div class="bg-white border border-slate-200 rounded-xl p-8 text-center space-y-4 shadow-sm">
             <div class="w-14 h-14 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-2xl mx-auto">
-                <i class="fa-solid fa-shield-halved"></i>
+               
             </div>
             <div class="space-y-1">
                 <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest">Inventory Clearance Required</h3>
@@ -271,79 +272,115 @@
             </div>
             <div class="pt-2">
                 <a href="{% url 'product_list' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-black uppercase tracking-wider text-slate-700 transition-colors">
-                    <i class="fa-solid fa-warehouse"></i> Return to Inventory Ledger
+                     Return to Inventory Ledger
                 </a>
             </div>
         </div>
     {% endif %}
 </div>
-
 <script>
-    function handleProductSelection() {
-        const inputVal = document.getElementById('product_name').value.trim();
-        const options = document.querySelectorAll('#existing-products-list option');
-        
-        options.forEach(option => {
-            if (option.value.trim() === inputVal) {
-                const cost = option.getAttribute('data-cost');
-                const selling = option.getAttribute('data-selling');
-                const catId = option.getAttribute('data-category');
-                const uom = option.getAttribute('data-uom');
+function handleProductSelection() {
+    const inputVal = document.getElementById('product_name').value.trim();
+    const options = document.querySelectorAll('#existing-products-list option');
+    
+    options.forEach(option => {
+        if (option.value.trim() === inputVal) {
+            const cost = option.getAttribute('data-cost');
+            const selling = option.getAttribute('data-selling');
+            const catId = option.getAttribute('data-category');
+            const uom = option.getAttribute('data-uom');
 
-                if (cost) document.getElementById('cost_price').value = cost;
-                if (selling) document.getElementById('selling_price').value = selling;
-                if (catId) document.getElementById('category').value = catId;
-                if (uom) document.getElementById('unit_of_measure').value = uom;
+            if (cost) document.getElementById('cost_price').value = cost;
+            if (selling) document.getElementById('selling_price').value = selling;
+            if (catId) document.getElementById('category').value = catId;
+            if (uom) document.getElementById('unit_of_measure').value = uom;
 
-                calculateFinancialTotals();
-            }
-        });
-    }
-
-    function toggleCreditSubform() {
-        const check = document.getElementById('is_credit');
-        const container = document.getElementById('creditSubFormFields');
-        const supplierSelect = document.getElementById('supplier_id');
-        const invoiceInput = document.getElementById('invoice_number');
-
-        if (check.checked) {
-            container.classList.remove('hidden');
-            supplierSelect.required = true;
-            invoiceInput.required = true;
             calculateFinancialTotals();
-        } else {
-            container.classList.add('hidden');
-            supplierSelect.required = false;
-            invoiceInput.required = false;
-            supplierSelect.value = "";
-            invoiceInput.value = "";
         }
+    });
+}
+
+function toggleCreditSubform() {
+    const check = document.getElementById('is_credit');
+    const container = document.getElementById('creditSubFormFields');
+    const supplierSelect = document.getElementById('supplier_id');
+    const invoiceInput = document.getElementById('invoice_number');
+
+    if (check.checked) {
+        container.classList.remove('hidden');
+        supplierSelect.required = true;
+        invoiceInput.required = true;
+        calculateFinancialTotals();
+    } else {
+        container.classList.add('hidden');
+        supplierSelect.required = false;
+        invoiceInput.required = false;
+        supplierSelect.value = "";
+        invoiceInput.value = "";
+    }
+}
+
+function calculateFinancialTotals() {
+    const qty = parseInt(document.getElementById('quantity').value) || 0;
+    const cost = parseFloat(document.getElementById('cost_price').value) || 0;
+    const sell = parseFloat(document.getElementById('selling_price').value) || 0;
+    const paid = parseFloat(document.getElementById('amount_paid').value) || 0;
+    const reorderLvl = parseInt(document.getElementById('reorder_level').value) || 0;
+
+    const warning = document.getElementById('priceWarning');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // --- 1. LIVE REORDER STOCK LOGIC ---
+    const inputName = document.getElementById('product_name').value.trim();
+    const options = document.querySelectorAll('#existing-products-list option');
+    let currentStockInWarehouse = 0;
+
+    // Search datalist to see if this product already has active units in stock
+    options.forEach(option => {
+        if (option.value.trim() === inputName) {
+            // If your datalist option doesn't have data-stock yet, it defaults to 0
+            currentStockInWarehouse = parseInt(option.getAttribute('data-stock')) || 0;
+        }
+    });
+
+    const totalProjectedStock = currentStockInWarehouse + qty;
+
+    // --- 2. MULTI-FLANK COMPLIANCE CHECK ---
+    let pricingViolation = (sell > 0 && sell <= cost);
+    let reorderViolation = (reorderLvl > totalProjectedStock);
+
+    // Dynamic warning blocks visibility toggle
+    if (pricingViolation) {
+        warning.innerText = "COMPLIANCE FAULT: Selling price parameter must be strictly higher than the base inbound warehouse product unit cost.";
+        warning.style.display = 'flex';
+    } else if (reorderViolation) {
+        warning.innerText = `LOGIC FAULT: Safety reorder level (${reorderLvl}) cannot exceed the resulting total stock quantity (${totalProjectedStock}).`;
+        warning.style.display = 'flex';
+    } else {
+        warning.style.display = 'none';
     }
 
-    function calculateFinancialTotals() {
-        const qty = parseInt(document.getElementById('quantity').value) || 0;
-        const cost = parseFloat(document.getElementById('cost_price').value) || 0;
-        const sell = parseFloat(document.getElementById('selling_price').value) || 0;
-        const paid = parseFloat(document.getElementById('amount_paid').value) || 0;
-
-        const warning = document.getElementById('priceWarning');
-        const submitBtn = document.getElementById('submitBtn');
-
-        if (sell > 0 && sell <= cost) {
-            warning.style.display = 'flex';
-            submitBtn.disabled = true;
-            submitBtn.className = "w-full bg-slate-100 text-slate-400 border border-slate-200 font-black py-3 rounded-lg text-xs uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-1.5 shadow-none";
-        } else {
-            warning.style.display = 'none';
-            submitBtn.disabled = false;
-            submitBtn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer";
-        }
-
-        const totalCost = Math.round(qty * cost);
-        const remainingBalance = Math.round(totalCost - paid);
-
-        document.getElementById('display_total_cost').innerText = "UGX " + totalCost.toLocaleString();
-        document.getElementById('display_balance_owed').innerText = "UGX " + (remainingBalance > 0 ? remainingBalance.toLocaleString() : 0);
+    // Freeze or Unlock the Post Button completely
+    if (pricingViolation || reorderViolation) {
+        submitBtn.disabled = true;
+        submitBtn.className = "w-full bg-slate-100 text-slate-400 border border-slate-200 font-black py-3 rounded-lg text-xs uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-1.5 shadow-none";
+    } else {
+        submitBtn.disabled = false;
+        submitBtn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer";
     }
+
+    // --- 3. INVOICE CALCULATION LOGIC ---
+    const totalCost = Math.round(qty * cost);
+    
+    if (paid > totalCost) {
+        document.getElementById('amount_paid').value = totalCost;
+        calculateFinancialTotals(); // Recalculate with clamped payment value
+        return;
+    }
+
+    const remainingBalance = Math.round(totalCost - paid);
+    document.getElementById('display_total_cost').innerText = "UGX " + totalCost.toLocaleString();
+    document.getElementById('display_balance_owed').innerText = "UGX " + (remainingBalance > 0 ? remainingBalance.toLocaleString() : 0);
+}
 </script>
 {% endblock %}
