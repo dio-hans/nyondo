@@ -381,6 +381,7 @@ def stock_movement_history(request):
 @login_required
 @role_required(['MANAGER'])
 def supplier_create(request):
+    
 
     if request.method == "POST":
 
